@@ -92,7 +92,7 @@ class JyFrame():
         
         # Handle key types by using ._customTypes and _TYPES_DICT
         self._keyTypes = {}
-        for col, _type in keyTypes:
+        for col, _type in keyTypes.items():
             if isinstance( _type, str ):
                 # Check custom types first
                 if _type in self._customTypes:
@@ -596,7 +596,11 @@ class JyFrame():
         return
     #/def _set_index_withDict
     
-    def _set_fixed( self: Self, col: str, newvalue: any ) -> None:
+    def _set_fixed(
+        self: Self,
+        col: str,
+        newvalue: any
+        ) -> None:
         self._fixed[ col ] = newvalue
         return
     #/def _set_fixed
@@ -765,11 +769,17 @@ class JyFrame():
         #
         elif isinstance( index, str ):
             if index in self._fixed:
-                self._set_fixed( col = index, row = newvalue )
+                self._set_fixed(
+                    col = index,
+                    newvalue = newvalue
+                )
                 return
             #
             if isinstance( newvalue, list ):
-                self._set_column_withList( col = index, newList = newvalue )
+                self._set_column_withList(
+                    col = index,
+                    newList = newvalue
+                )
                 return
             #
             if isinstance( newvalue, dict ):
@@ -1382,7 +1392,7 @@ def read_csv(
         
         Quick and dirty; reads entire csv with only `shift` data. The result is a bigger file. If you want to make it more efficient, with `fixed` and `shiftIndex` values, then use ``.consolidate()``
     """
-    
+    raise Exception("UC")
 #/def read_csv
 
 ## -- Transformations

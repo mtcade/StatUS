@@ -10,9 +10,9 @@
     status: dict = work.getStatus( request: dict )
     
 """
+from . import jable
 
 from typing import Literal, Optional, Protocol, Self, TypedDict
-import jable
 import queue
 
 import numpy as np
@@ -232,15 +232,6 @@ def getMoves_forPlayer(
         CellCapture
     ]
     
-    # Print places identified for potential moves
-    if False:
-        print("{} potential moves:".format(len(potential_moves)))
-        print_boardState(
-            boardState = boardState,
-            qr_list = potential_moves
-        )
-    #/if True
-    
     for qr in potential_moves:
         captures = getCaptures_forMove(
             update = {"q": qr[0], "r": qr[1], "owner": player},
@@ -253,6 +244,7 @@ def getMoves_forPlayer(
     
     return moves
 #/def getMoves_forPlayer
+
 
 # -- Hexathello helpers
 class HexagonGridHelper():
@@ -319,15 +311,24 @@ class HexagonGridHelper():
         self: Self,
         boardState: BoardState
         ) -> np.ndarray:
+        """
+            Gets a OHE vector describing the board. Each space is a series of tuples of length equal to the number of players; if all are 0, the space is unoccupied. If it is owned, then the jth index being 1 is the owner.
+            
+            Example: for two players, if we have
+            
+            [0,1,0,0,1,0], then there are three spaces. Player 1 owns the first space ([0,1]), nobody owns the second ([0,1]), player 0 owns the third ([1,0]).
+            
+            When an agent from `autoPlayer` picks, they expect to see it as if they were the first player; as a result, they will take the board state, and shift each vector by their player_id, wrapping around. As a result, from their point of view, every board has them as player 0.
+        """
         stateVector: np.ndarray = np.zeros(
-            shape = (self.length*player_count,),
+            shape = (self.length*self.player_count,),
             dtype = float
         )
         
         i: int
         
         for qr, status in boardState.items():
-            i = self[ qr_to_index[ qr ] ]
+            i = self.qr_to_index[ qr ]
             # Check the status of the space
             if status["owner"] is not None:
                 # Index in the tuple is the player index
@@ -361,6 +362,19 @@ class HexagonGridHelper():
         return self.qr_from_index( i )
     #/def play_from_moveVector
 #/class HexagonGridHelper
+
+SIZE_DICT: dict[ int, int ] = {3: 19, 4: 37, 5: 61, 6: 91}
+
+def get_spaceCount_forSize( size: int ):
+    if size in SIZE_DICT:
+        return SIZE_DICT[ size ]
+    #
+    
+    hexagonGridHelper = HexagonGridHelper( size = size, player_count = 2 )
+    SIZE_DICT[ size ] = int( hexagonGridHelper.length )
+    
+    return SIZE_DICT[ size ]
+#
 
 # -- Simulator: interface for Spaghett
 
@@ -420,7 +434,7 @@ class Hexathello( Simulator ):
         input status:
             fixed:
                 {
-                    "winner": Literal[0,1,None],
+                    "winner": int | None,
                     "turn_index": int,
                     "size": int,
                     "game_complete": bool,
@@ -776,7 +790,7 @@ class Hexathello( Simulator ):
                 # Check if there are any ties
                 for i in range( self.status["player_count"] ):
                     if self.status["scores"][ i ] >= winning_score:
-                        winner_list.append( str(i) )
+                        winner_list.append( i )
                     #/if self.status["scores"][ i ] >= winning_score
                 #/for i in range( self.status["player_count"] )
                 
@@ -838,11 +852,12 @@ class Hexathello( Simulator ):
                                     )
                                 ]
                             ),
-                            ", ".join( winner_list )
+                            ", ".join(
+                                str(_winner) for _winner in winner_list
+                            )
                         )
                     )
                 #
-            
             #/if game_over
             
             if self.logging_level > 0:
@@ -876,10 +891,11 @@ class Hexathello( Simulator ):
 
 def new_initial_boardState(
     size: int,
-    player_count: int
+    player_count: int,
+    include_middle = True
     ) -> BoardState:
     """
-        Set initial empty board, with missing center and a ring around the center of alternating players
+        Set initial empty board, with a ring around the center of alternating players
     """
     assert player_count in [2,3,6]
     assert size > 2
@@ -889,14 +905,30 @@ def new_initial_boardState(
         player_count = player_count
     )
     
-    boardState: BoardState = {
-        qr: {
-            "q": qr[0],
-            "r": qr[1],
-            "occupied_adjacent": 0,
-            "owner": None
-        } for qr in hexagonGridHelper.index_to_qr if qr != (0,0)
-    }
+    # We allow the middle play. For historical reasons, we show the logic
+    #   of leaving out the middle space
+    if include_middle:
+        boardState: BoardState = {
+            qr: {
+                "q": qr[0],
+                "r": qr[1],
+                "occupied_adjacent": 0,
+                "owner": None
+            } for qr in hexagonGridHelper.index_to_qr
+        }
+    #
+    else:
+        boardState: BoardState = {
+            qr: {
+                "q": qr[0],
+                "r": qr[1],
+                "occupied_adjacent": 0,
+                "owner": None
+            } for qr in hexagonGridHelper.index_to_qr if qr != (0,0)
+        }
+        raise Exception("include_middle=False deprecated")
+    #/if include_middle
+    
     # Set the initial players in the innner ring starting at (1,0)
     _player_index: int = 0
     for vector in CLOCKWISE_UNIT_VECTOR_LIST:

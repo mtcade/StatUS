@@ -4,7 +4,7 @@
     Keeps track of the game state by using WorldSimulator
 """
 
-from . import HexathelloEngine
+from . import engine
 
 from typing import Self
 
