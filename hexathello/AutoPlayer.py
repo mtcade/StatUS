@@ -140,28 +140,15 @@ def povHistory_from_literalHistory(
         size = literalHistory.get_fixed("size")
     )
     
-    literalWinner: int | None = literalHistory.get_fixed("winner")
+    literalWinner: int | None
     winner: int | None
     for row in literalHistory:
-        # TEST
-        if False:
-            print( type(literalHistory.get_fixed("winner")) )
-            print( literalHistory.get_fixed("winner") )
-            
-            print( type(row["current_player"]) )
-            print( row["current_player"] )
-            
-            print( type( literalHistory.get_fixed("player_count") ) )
-            print( literalHistory.get_fixed("player_count") )
-            raise Exception("Check rows")
-        #
-        
-        
+        literalWinner = row["winner"]
         if literalWinner is None:
             winner = None
         else:
             winner = (
-                literalHistory.get_fixed("winner") - row["current_player"]
+                literalWinner - row["current_player"]
             ) % literalHistory.get_fixed("player_count")
         #/if literalWinner is None/else
         
@@ -175,7 +162,7 @@ def povHistory_from_literalHistory(
             ),
             "action_choices": row["action_choices"],
             "player_action": row["player_action"],
-            "scores": np.roll( literalHistory.get_fixed("scores"), -1*row["current_player"] ).tolist(),
+            "scores": np.roll( row["scores"], -1*row["current_player"] ).tolist(),
             "winner": winner,
             "ai_id": row["ai_id"]
         })
@@ -475,8 +462,7 @@ class KerasHexAgent( HexAgent ):
         
         # Use our brain to choose the best move
         moveChoice_vector: np.ndarray = self.brain.predict(
-            boardState_vector,
-            rng = rng
+            boardState_vector
         )
         
         # Mask it with legal moves
@@ -546,6 +532,9 @@ class KerasHexAgent( HexAgent ):
             
             *args, **kwargs: Passed to `brain.fit()`, see
             https://www.tensorflow.org/api_docs/python/tf/keras/Model#fit
+            
+            Consider:
+            - epochs
             
             # TODO: handle weights
         """
