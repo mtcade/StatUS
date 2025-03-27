@@ -62,9 +62,9 @@ def new_literalHistory(
         fixed = {
             "player_count": player_count,
             "size": size,
+            "history_type": history_type,
             "winner": winner,
-            "scores": scores,
-            "history_type": history_type
+            "scores": scores
         },
         shiftHeader = [
             "turn_index",
@@ -233,7 +233,7 @@ def history_asInt(
     for row in history:
         old_fields: dict[ str, any ] = {
             key: val for key, val in row.items() if key not in [
-                "board_state","player_action"
+                "board_state","action_choices","player_action"
             ]
         }
         history_out.append(
@@ -305,6 +305,21 @@ def history_fromInt(
     return history_out
 #/def history_fromBase64
 
+# Interface for Keras Network and other ML models to decide on a move
+class PredictionModel( Protocol ):
+    def fit( self: Self, X: np.ndarray, y: np.ndarray, **kwargs ) -> Self:
+        raise NotImplementedError
+    #
+    
+    def predict( self: Self, X: np.ndarray ) -> np.ndarray:
+        raise NotImplementedError
+    #
+    
+    def call( self: Self, X ):
+        raise NotImplementedError
+    #
+#/class PredictionModel( Protocol )
+
 # -- AI Agents
 
 class HexAgent():
@@ -336,20 +351,50 @@ class HexAgent():
     #/def getMove_fromBoardState
 #/class HexAgent
 
-# Interface for Keras Network and other ML models to decide on a move
-class PredictionModel( Protocol ):
-    def fit( self: Self, X: np.ndarray, y: np.ndarray, **kwargs ) -> Self:
-        raise NotImplementedError
-    #
+# -- HexAgent Helpers
+
+def _random_play(
+    moveChoiceDict: engine.MoveChoiceDict,
+    rng: np.random.Generator
+    ) -> engine.QRTuple:
+    """
+        Choice randomly from provided choices, assuming they are legal
+    """
+    qr_list: list[ engine.QRTuple ] = [
+        qr for qr in moveChoiceDict.keys()
+    ]
+
+    return qr_list[
+        rng.choice(
+            len( qr_list )
+        )
+    ]
+#/def _random_play
+
+def _greedy_play(
+    moveChoiceDict: engine.MoveChoiceDict,
+    rng: np.random.Generator
+    ) -> engine.QRTuple:
+    """
+        Choose randomly from those which capture the most pieces
+    """
+    max_captures: int = max(
+        len( capture_list ) for capture_list in moveChoiceDict.values()
+    )
     
-    def predict( self: Self, X: np.ndarray ) -> np.ndarray:
-        raise NotImplementedError
-    #
+    qr_list: list[ engine.QRTuple ] = [
+        qr for qr, capture_list in moveChoiceDict.items()
+            if len( capture_list ) == max_captures
+    ]
     
-    def call( self: Self, X ):
-        raise NotImplementedError
-    #
-#/class PredictionModel( Protocol )
+    return qr_list[
+        rng.choice(
+            len( qr_list )
+        )
+    ]
+#/def _greedy_play
+
+# -- Hex Agents
 
 class KerasHexAgent( HexAgent ):
     """
@@ -501,6 +546,8 @@ class KerasHexAgent( HexAgent ):
             
             *args, **kwargs: Passed to `brain.fit()`, see
             https://www.tensorflow.org/api_docs/python/tf/keras/Model#fit
+            
+            # TODO: handle weights
         """
         assert history.get_fixed( "history_type" ) == 'pov'
         
@@ -551,23 +598,20 @@ class RandomHexAgent( HexAgent ):
         rng: np.random.Generator,
         potential_moves: list[ engine.CellCapture ] = []
         ) -> engine.PlayerMove:
+        """
+            Choose randomly from legal moves
+        """
         assert self.player_id is not None
-        moves: engine.MoveChoiceDict = engine.getMoves_forPlayer(
+        moveChoiceDict: engine.MoveChoiceDict = engine.getMoves_forPlayer(
             player = self.player_id,
             boardState = boardState,
             potential_moves = potential_moves
         )
         
-        # Pick randomly from possible moves
-        qr_list: list[ engine.QRTuple ] = [
-            qr for qr in moves.keys()
-        ]
-
-        qr: engine.QRTuple = qr_list[
-            rng.choice(
-                len( qr_list )
-            )
-        ]
+        qr: engine.QRTuple = _random_play(
+            moveChoiceDict = moveChoiceDict,
+            rng = rng
+        )
         
         return {
             "turn_index": turn_index,
@@ -588,7 +632,7 @@ class GreedyHexAgent( HexAgent ):
         player_count: int,
         player_id: int | None = None,
         ai_id: str = 'GreedyHexAgent'
-    ) -> None:
+        ) -> None:
         super().__init__(
             size = size,
             player_count = player_count,
@@ -609,27 +653,9 @@ class GreedyHexAgent( HexAgent ):
             Pick a random index which has the largest number of captures
         """
         assert self.player_id is not None
-        moves: engine.MoveChoiceDict = engine.getMoves_forPlayer(
-            player = self.player_id,
-            boardState = boardState,
-            potential_moves = potential_moves
+        qr: engine.QRTuple = _greedy_play(
+            moveChoiceDict
         )
-        
-        max_captures: int = max(
-            len( capture_list ) for capture_list in moves.values()
-        )
-        
-        qr_list: list[ engine.QRTuple ] = [
-            qr for qr, capture_list in moves.items()
-                if len( capture_list ) == max_captures
-        ]
-        
-        qr: engine.QRTuple = qr_list[
-            rng.choice(
-                len( qr_list )
-            )
-        ]
-        
         return {
             "turn_index": turn_index,
             "q": qr[0],
@@ -638,6 +664,87 @@ class GreedyHexAgent( HexAgent ):
         }
     #/def getMove_fromBoardState
 #/class GreedyHexAgent( HexAgent )
+
+class GreendomHexAgent( HexAgent ):
+    """
+        With parameter `p`, choose between the greedy choice or the random choice. Hence, sometimes Greedy sometimes Random, so Greendom. Chooses greedy with probability `p`
+        
+        Try to name with p, but with a '-' instead of decimal '.', like
+        `p = 0.5` -> `ai_id = 'GreendomHexAgent_0-5'`. This is automatic if you do not specify `ai_id`
+    """
+    def __init__(
+        self: Self,
+        size: int,
+        player_count: int,
+        player_id: int | None = None,
+        ai_id: str = 'GreendomHexAgent',
+        p: float = 0.5
+        ) -> None:
+        
+        _ai_id: str
+        if ai_id == 'GreendomHexAgent':
+            _ai_id = '{}_{}'.format(
+                ai_id, str( p ).replace('.','-')
+            )
+        #
+        else:
+            _ai_id = ai_id
+        #/switch ai_id
+        
+        super().__init__(
+            size = size,
+            player_count = player_count,
+            player_id = player_id,
+            ai_id = _ai_id
+        )
+        
+        self.p = p
+        return
+    #/def __init__
+    
+    def getMove_fromBoardState(
+        self: Self,
+        boardState: engine.BoardState,
+        turn_index: int,
+        rng: np.random.Generator,
+        potential_moves: list[ engine.CellCapture ] = []
+        ) -> engine.PlayerMove:
+        """
+            Choose randomly from legal moves
+        """
+        assert self.player_id is not None
+        moveChoiceDict: engine.MoveChoiceDict = engine.getMoves_forPlayer(
+            player = self.player_id,
+            boardState = boardState,
+            potential_moves = potential_moves
+        )
+        
+        # Randomly choose whether to be greedy with probability p
+        qr: engine.QRTuple
+        if rng.choice(
+            2,
+            p = ( 1-self.p, self.p )
+        ):
+            qr = _greedy_play(
+                moveChoiceDict = moveChoiceDict,
+                rng = rng
+            )
+        #
+        else:
+            qr = _random_play(
+                moveChoiceDict = moveChoiceDict,
+                rng = rng
+            )
+        #/if { choose greedy }
+        
+        return {
+            "turn_index": turn_index,
+            "q": qr[0],
+            "r": qr[1],
+            "owner": self.player_id
+        }
+    #/def getMove_fromBoardState
+#/class GreendomHexAgent
 
 def runHexathello_withAgents(
     agents: list[ HexAgent ],
