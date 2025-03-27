@@ -6,8 +6,49 @@ from . import engine, jable
 import numpy as np
 
 from typing import Literal, Protocol, Self
+from abc import abstractmethod
 
-# -- AI Agents Helpers
+class AiAgentProtocol( Protocol ):
+    """
+        Protocol for aiPlayers.HexAgent
+    """
+    def __init__(
+        self: Self,
+        size: int,
+        player_count: int,
+        p_random: float = 0.0,
+        player_id: int | None = None,
+        ai_id: str = '',
+        hexagonGridHelper: engine.HexagonGridHelper | None = None
+        ) -> None:
+        raise NotImplementedError
+    #
+
+    def getMove_fromBoardState(
+        self: Self,
+        boardState: engine.BoardState,
+        turn_index: int,
+        rng: np.random.Generator,
+        potential_moves: list[ engine.CellCapture ] = []
+        ) -> engine.PlayerMove:
+        raise NotImplementedError
+    #
+
+    @property
+    @abstractmethod
+    def player_id( self: Self ) -> int | None:
+        raise NotImplementedError
+    #
+    
+    @property
+    @abstractmethod
+    def ai_id( self: Self ) -> str:
+        raise NotImplementedError
+    #
+#/class AiAgentProtocol
+
+# -- History: a JyFrame for learning
+
 def get_relativeStateVector(
     boardState_vector: np.ndarray,
     player_id: int,
@@ -42,8 +83,6 @@ def get_relativeStateVector(
     #
     return relativeStateVector
 #/def get_relativeStateVector
-
-# -- History: a JyFrame for learning
 
 def new_literalHistory(
     player_count: int,
@@ -292,451 +331,8 @@ def history_fromInt(
     return history_out
 #/def history_fromBase64
 
-# Interface for Keras Network and other ML models to decide on a move
-class PredictionModel( Protocol ):
-    def fit( self: Self, X: np.ndarray, y: np.ndarray, **kwargs ) -> Self:
-        raise NotImplementedError
-    #
-    
-    def predict( self: Self, X: np.ndarray ) -> np.ndarray:
-        raise NotImplementedError
-    #
-    
-    def call( self: Self, X ):
-        raise NotImplementedError
-    #
-#/class PredictionModel( Protocol )
-
-# -- AI Agents
-
-class HexAgent():
-    """
-        Agents which play hexathello
-    """
-    def __init__(
-        self: Self,
-        size: int,
-        player_count: int,
-        player_id: int | None = None,
-        ai_id: str = ''
-        ) -> None:
-        self.size = size
-        self.player_count = player_count
-        self.player_id = player_id
-        self.ai_id = ai_id
-        return
-    #/def __init__
-    
-    def getMove_fromBoardState(
-        self: Self,
-        boardState: engine.BoardState,
-        turn_index: int,
-        rng: np.random.Generator,
-        potential_moves: list[ engine.CellCapture ] = []
-        ) -> engine.PlayerMove:
-        raise NotImplementedError
-    #/def getMove_fromBoardState
-#/class HexAgent
-
-# -- HexAgent Helpers
-
-def _random_play(
-    moveChoiceDict: engine.MoveChoiceDict,
-    rng: np.random.Generator
-    ) -> engine.QRTuple:
-    """
-        Choice randomly from provided choices, assuming they are legal
-    """
-    qr_list: list[ engine.QRTuple ] = [
-        qr for qr in moveChoiceDict.keys()
-    ]
-
-    return qr_list[
-        rng.choice(
-            len( qr_list )
-        )
-    ]
-#/def _random_play
-
-def _greedy_play(
-    moveChoiceDict: engine.MoveChoiceDict,
-    rng: np.random.Generator
-    ) -> engine.QRTuple:
-    """
-        Choose randomly from those which capture the most pieces
-    """
-    max_captures: int = max(
-        len( capture_list ) for capture_list in moveChoiceDict.values()
-    )
-    
-    qr_list: list[ engine.QRTuple ] = [
-        qr for qr, capture_list in moveChoiceDict.items()
-            if len( capture_list ) == max_captures
-    ]
-    
-    return qr_list[
-        rng.choice(
-            len( qr_list )
-        )
-    ]
-#/def _greedy_play
-
-# -- Hex Agents
-
-class KerasHexAgent( HexAgent ):
-    """
-        Uses a tensorflow keras network to make decisions, via a PredictionModel, most likely a trained neural net
-    """
-    def __init__(
-        self: Self,
-        size: int,
-        player_count: int,
-        brain: PredictionModel | None = None,
-        hexagonGridHelper: engine.HexagonGridHelper | None = None,
-        player_id: int | None = None,
-        ai_id: str = ''
-        ) -> None:
-        super().__init__(
-            size = size,
-            player_count = player_count,
-            player_id = player_id,
-            ai_id = ai_id
-        )
-        self.brain = brain
-        
-        if hexagonGridHelper is None:
-            self.hexagonGridHelper = engine.HexagonGridHelper(
-                size = size,
-                player_count = player_count
-            )
-        else:
-            self.hexagonGridHelper = hexagonGridHelper
-        #
-        return
-    #/def __init__
-    
-    def chooseMove(
-        self: Self,
-        moveChoice_vector: np.ndarray,
-        rng: np.random.Generator
-    ) -> int:
-        """
-            Get the index of a choice by one way or another
-            Different implementations might use max, or soft max among those
-                positive
-                
-            This is the default implementation where we choose the max
-        """
-        return np.argmax( moveChoice_vector )
-    #/def chooseMove
-    
-    def getBoardState_asRelativeStateVector(
-        self: Self,
-        boardState: engine.BoardState
-        ) -> np.ndarray:
-        """
-            Gets the board state as a vector from the point of view of the agent, aka the agent as if they were player 0. This ensures consistent learning no matter the player index.
-        """
-        boardState_vector: np.ndarray = self.hexagonGridHelper.stateVector_from_boardState(
-            boardState
-        )
-        
-        return get_relativeStateVector(
-            boardState_vector = boardState_vector,
-            player_id = self.player_id,
-            player_count = self.player_count
-        )
-    #/getBoardState_asStateVector
-    
-    def getMove_fromBoardState(
-        self: Self,
-        boardState: engine.BoardState,
-        turn_index: int,
-        rng: np.random.Generator,
-        potential_moves: list[ engine.CellCapture ] = []
-        ) -> engine.PlayerMove:
-        # Turn moves into a vector suitable for brain
-        boardState_vector: np.ndarray = self.hexagonGridHelper.stateVector_from_boardState(
-            boardState
-        )
-        
-        # Use our brain to choose the best move
-        moveChoice_vector: np.ndarray = self.brain.predict(
-            boardState_vector
-        )
-        
-        # Mask it with legal moves
-        moves: engine.MoveChoiceDict = engine.getMoves_forPlayer(
-            player = self.player_id,
-            boardState = boardState,
-            potential_moves = potential_moves
-        )
-        
-        assert len( moves ) > 0
-        legal_moves_vector: np.ndarray = np.zeros(
-            shape = (len( moveChoice_vector ),),
-            dtype = float
-        )
-        for qr in moves:
-            moves_vector[
-                self.hexagonGridHelper.index_from_qr_tuple(
-                    qr
-                )
-            ] = 1.0
-        #/for qr in moves
-        
-        
-        # Distribution of choices might have been given; make choice, potentially probabilistically
-        moveChoice_final: int = self.choseMove(
-            moveChoice_vector * legal_moves_vector
-        )
-        moveChoice_qr: engine.QRTuple = self.hexagonGridHelper.qr_from_index[
-            moveChoice_final
-        ]
-        
-        assert moveChoice_qr in moves
-        
-        return {
-            "turn_index": turn_index,
-            "q": moveChoice_qr[0],
-            "r": moveChoice_qr[1],
-            "owner": self.player_id
-        }
-    #/def getMove_fromBoardState
-    
-    def prep_training_history(
-        self: Self,
-        history: jable.JyFrame
-        ) -> jable.JyFrame:
-        """
-            Turn history into something we can actually learn from
-            
-            The default behavior is to learn only from winning moves and ignore others
-        """
-        assert history.get_fixed( "history_type" ) == 'pov'
-        
-        return jable.filter(
-            history,
-            {'winner': 0}
-        )
-    #/def prep_training_history
-    
-    def train(
-        self: Self,
-        history: jable.JyFrame,
-        *args,
-        **kwargs
-        ) -> None:
-        """
-            Train the brain with a Pov History JyFrame
-            
-            *args, **kwargs: Passed to `brain.fit()`, see
-            https://www.tensorflow.org/api_docs/python/tf/keras/Model#fit
-            
-            Consider:
-            - epochs
-            
-            # TODO: handle weights
-        """
-        assert history.get_fixed( "history_type" ) == 'pov'
-        
-        # Prep history
-        history_prepped: jable.JyFrame = self.prep_training_history(
-            history
-        )
-        
-        X: np.ndarray = np.array(
-            history_prepped[ "board_state" ]
-        )
-        
-        y: np.ndarray = np.array(
-            history_prepped[ "player_action" ]
-        )
-        
-        self.brain.fit( X, y, *args, **kwargs )
-        
-        return
-    #/def train
-#/class KerasHexAgent
-
-class RandomHexAgent( HexAgent ):
-    """
-        Picks randomly from legal moves
-    """
-    def __init__(
-        self: Self,
-        size: int,
-        player_count: int,
-        player_id: int | None = None,
-        ai_id: str = 'RandomHexAgent'
-        ) -> None:
-        
-        super().__init__(
-            size = size,
-            player_count = player_count,
-            player_id = player_id,
-            ai_id = ai_id
-        )
-        return
-    #/def __init__
-    
-    def getMove_fromBoardState(
-        self: Self,
-        boardState: engine.BoardState,
-        turn_index: int,
-        rng: np.random.Generator,
-        potential_moves: list[ engine.CellCapture ] = []
-        ) -> engine.PlayerMove:
-        """
-            Choose randomly from legal moves
-        """
-        assert self.player_id is not None
-        moveChoiceDict: engine.MoveChoiceDict = engine.getMoves_forPlayer(
-            player = self.player_id,
-            boardState = boardState,
-            potential_moves = potential_moves
-        )
-        
-        qr: engine.QRTuple = _random_play(
-            moveChoiceDict = moveChoiceDict,
-            rng = rng
-        )
-        
-        return {
-            "turn_index": turn_index,
-            "q": qr[0],
-            "r": qr[1],
-            "owner": self.player_id
-        }
-    #/def getMove_fromBoardState
-#/class RandomHexAgent( HexAgent )
-
-class GreedyHexAgent( HexAgent ):
-    """
-        Picks randomly from among moves which give the most immediate captures
-    """
-    def __init__(
-        self: Self,
-        size: int,
-        player_count: int,
-        player_id: int | None = None,
-        ai_id: str = 'GreedyHexAgent'
-        ) -> None:
-        super().__init__(
-            size = size,
-            player_count = player_count,
-            player_id = player_id,
-            ai_id = ai_id
-        )
-        return
-    #/def __init__
-    
-    def getMove_fromBoardState(
-        self: Self,
-        boardState: engine.BoardState,
-        turn_index: int,
-        rng: np.random.Generator,
-        potential_moves: list[ engine.CellCapture ] = []
-        ) -> engine.PlayerMove:
-        """
-            Pick a random index which has the largest number of captures
-        """
-        assert self.player_id is not None
-        qr: engine.QRTuple = _greedy_play(
-            moveChoiceDict
-        )
-        return {
-            "turn_index": turn_index,
-            "q": qr[0],
-            "r": qr[1],
-            "owner": self.player_id
-        }
-    #/def getMove_fromBoardState
-#/class GreedyHexAgent( HexAgent )
-
-class GreendomHexAgent( HexAgent ):
-    """
-        With parameter `p`, choose between the greedy choice or the random choice. Hence, sometimes Greedy sometimes Random, so Greendom. Chooses greedy with probability `p`
-        
-        Try to name with p, but with a '-' instead of decimal '.', like
-        `p = 0.5` -> `ai_id = 'GreendomHexAgent_0-5'`. This is automatic if you do not specify `ai_id`
-    """
-    def __init__(
-        self: Self,
-        size: int,
-        player_count: int,
-        player_id: int | None = None,
-        ai_id: str = 'GreendomHexAgent',
-        p: float = 0.5
-        ) -> None:
-        
-        _ai_id: str
-        if ai_id == 'GreendomHexAgent':
-            _ai_id = '{}_{}'.format(
-                ai_id, str( p ).replace('.','-')
-            )
-        #
-        else:
-            _ai_id = ai_id
-        #/switch ai_id
-        
-        super().__init__(
-            size = size,
-            player_count = player_count,
-            player_id = player_id,
-            ai_id = _ai_id
-        )
-        
-        self.p = p
-        return
-    #/def __init__
-    
-    def getMove_fromBoardState(
-        self: Self,
-        boardState: engine.BoardState,
-        turn_index: int,
-        rng: np.random.Generator,
-        potential_moves: list[ engine.CellCapture ] = []
-        ) -> engine.PlayerMove:
-        """
-            Choose randomly from legal moves
-        """
-        assert self.player_id is not None
-        moveChoiceDict: engine.MoveChoiceDict = engine.getMoves_forPlayer(
-            player = self.player_id,
-            boardState = boardState,
-            potential_moves = potential_moves
-        )
-        
-        # Randomly choose whether to be greedy with probability p
-        qr: engine.QRTuple
-        if rng.choice(
-            2,
-            p = ( 1-self.p, self.p )
-        ):
-            qr = _greedy_play(
-                moveChoiceDict = moveChoiceDict,
-                rng = rng
-            )
-        #
-        else:
-            qr = _random_play(
-                moveChoiceDict = moveChoiceDict,
-                rng = rng
-            )
-        #/if { choose greedy }
-        
-        return {
-            "turn_index": turn_index,
-            "q": qr[0],
-            "r": qr[1],
-            "owner": self.player_id
-        }
-    #/def getMove_fromBoardState
-#/class GreendomHexAgent
-
 def runHexathello_withAgents(
-    agents: list[ HexAgent ],
+    agents: list[ AiAgentProtocol ],
     size: int,
     logging_level: int = 0,
     rng: np.random.Generator | None = None,
