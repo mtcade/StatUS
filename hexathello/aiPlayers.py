@@ -281,6 +281,9 @@ class KerasHexAgent( HexAgent ):
             The default behavior is to learn only from winning moves and ignore others
         """
         assert history.get_fixed( "history_type" ) == 'pov'
+        if history.get_fixed( "history_type" ) == 'pov':
+            ...
+        
         
         return jable.filter(
             history,
@@ -295,13 +298,18 @@ class KerasHexAgent( HexAgent ):
         **kwargs
         ) -> None:
         """
+            :param jable.JyFrame history:
+            :param list args: Args passed to `self.brain.fit()`
+            :param dict kwargs: Key word args passed to `self.brain.fit()`
+            
             Train the brain with a Pov History JyFrame
             
             *args, **kwargs: Passed to `brain.fit()`, see
             https://www.tensorflow.org/api_docs/python/tf/keras/Model#fit
             
             Consider:
-            - epochs
+            - epochs: int
+            - sample_weight: np.ndarray
             
             # TODO: handle weights
         """
