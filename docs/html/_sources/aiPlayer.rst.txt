@@ -2,3 +2,11 @@ aiPlayers
 ##########
 
 AI Players have a common interface for playing Hexathello.
+
+.. autoclass:: hexathello.aiPlayers.HexAgent
+
+.. autoclass:: hexathello.aiPlayers.GreedyHexAgent
+
+.. autoclass:: hexathello.aiPlayers.KerasHexAgent
+    :members: getMove_fromBoardState, train, prep_training_history
+

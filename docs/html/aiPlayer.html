@@ -35,6 +35,50 @@
   <section id="aiplayers">
 <h1>aiPlayers<a class="headerlink" href="#aiplayers" title="Link to this heading">¶</a></h1>
 <p>AI Players have a common interface for playing Hexathello.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="hexathello.aiPlayers.HexAgent">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hexathello.aiPlayers.</span></span><span class="sig-name descname"><span class="pre">HexAgent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">player_count</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p_random</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">player_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ai_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hexagonGridHelper</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">HexagonGridHelper</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hexathello.aiPlayers.HexAgent" title="Link to this definition">¶</a></dt>
+<dd><p>Semi Abstract parent class for Agents which play Hexathello</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hexathello.aiPlayers.GreedyHexAgent">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hexathello.aiPlayers.</span></span><span class="sig-name descname"><span class="pre">GreedyHexAgent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">player_count</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p_random</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">player_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ai_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'GreedyHexAgent'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hexagonGridHelper</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">HexagonGridHelper</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hexathello.aiPlayers.GreedyHexAgent" title="Link to this definition">¶</a></dt>
+<dd><p>Picks randomly from among moves which give the most immediate captures</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hexathello.aiPlayers.KerasHexAgent">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hexathello.aiPlayers.</span></span><span class="sig-name descname"><span class="pre">KerasHexAgent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">player_count</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p_random</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">player_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ai_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hexagonGridHelper</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">HexagonGridHelper</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">brain</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">PredictionModel</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hexathello.aiPlayers.KerasHexAgent" title="Link to this definition">¶</a></dt>
+<dd><p>Uses a tensorflow keras network to make decisions, via a PredictionModel, most likely a trained neural net</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hexathello.aiPlayers.KerasHexAgent.prep_training_history">
+<span class="sig-name descname"><span class="pre">prep_training_history</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gameHistory</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">JyFrame</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">JyFrame</span></span></span><a class="headerlink" href="#hexathello.aiPlayers.KerasHexAgent.prep_training_history" title="Link to this definition">¶</a></dt>
+<dd><p>Turn gameHistory into something we can actually learn from</p>
+<p>The default behavior is to learn only from winning moves and ignore others</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hexathello.aiPlayers.KerasHexAgent.train">
+<span class="sig-name descname"><span class="pre">train</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gameHistory</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">JyFrame</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#hexathello.aiPlayers.KerasHexAgent.train" title="Link to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>gameHistory</strong> (<em>jable.JyFrame</em>) – A literal or pov set of histories</p></li>
+<li><p><strong>args</strong> (<em>list</em>) – Args passed to <code class="docutils literal notranslate"><span class="pre">self.brain.fit()</span></code></p></li>
+<li><p><strong>kwargs</strong> (<em>dict</em>) – Key word args passed to <code class="docutils literal notranslate"><span class="pre">self.brain.fit()</span></code></p></li>
+</ul>
+</dd>
+</dl>
+<p>Train the brain with a Pov History JyFrame</p>
+<p>For <cite>args</cite> and <cite>kwargs</cite> consider:
+- epochs: int
+- sample_weight: np.ndarray</p>
+<p>See <a class="reference external" href="https://www.tensorflow.org/api_docs/python/tf/keras/Model#fit">https://www.tensorflow.org/api_docs/python/tf/keras/Model#fit</a></p>
+</dd></dl>
+
+</dd></dl>
+
 </section>
 
 
@@ -57,8 +101,14 @@
 <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="engine.html">engine</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">aiPlayers</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">aiPlayers</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#hexathello.aiPlayers.HexAgent"><code class="docutils literal notranslate"><span class="pre">HexAgent</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#hexathello.aiPlayers.GreedyHexAgent"><code class="docutils literal notranslate"><span class="pre">GreedyHexAgent</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#hexathello.aiPlayers.KerasHexAgent"><code class="docutils literal notranslate"><span class="pre">KerasHexAgent</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="autoPlayer.html">autoPlayer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="history.html">History</a></li>
 </ul>
 
 <div class="relations">

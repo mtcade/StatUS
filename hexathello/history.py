@@ -6,6 +6,8 @@
 
 from . import jable
 
+import numpy as np
+
 def get_relativeStateVector(
     boardState_vector: np.ndarray,
     player_id: int,

@@ -2,7 +2,7 @@
     Interface for AI agents to play hexathello
 """
 
-from . import engine, jable
+from . import engine, history, jable
 import numpy as np
 
 from typing import Literal, Protocol, Self
@@ -273,51 +273,60 @@ class KerasHexAgent( HexAgent ):
     
     def prep_training_history(
         self: Self,
-        history: jable.JyFrame
+        gameHistory: jable.JyFrame
         ) -> jable.JyFrame:
         """
-            Turn history into something we can actually learn from
+            Turn gameHistory into something we can actually learn from
             
             The default behavior is to learn only from winning moves and ignore others
         """
-        assert history.get_fixed( "history_type" ) == 'pov'
-        if history.get_fixed( "history_type" ) == 'pov':
-            ...
-        
+        assert gameHistory.get_fixed( "history_type" ) == 'pov'
         
         return jable.filter(
-            history,
+            gameHistory,
             {'winner': 0}
         )
     #/def prep_training_history
     
     def train(
         self: Self,
-        history: jable.JyFrame,
+        gameHistory: jable.JyFrame,
         *args,
         **kwargs
         ) -> None:
         """
-            :param jable.JyFrame history:
-            :param list args: Args passed to `self.brain.fit()`
-            :param dict kwargs: Key word args passed to `self.brain.fit()`
+            :param jable.JyFrame gameHistory: A literal or pov set of histories
+            :param list args: Args passed to ``self.brain.fit()``
+            :param dict kwargs: Key word args passed to ``self.brain.fit()``
             
             Train the brain with a Pov History JyFrame
             
-            *args, **kwargs: Passed to `brain.fit()`, see
-            https://www.tensorflow.org/api_docs/python/tf/keras/Model#fit
-            
-            Consider:
+            For `args` and `kwargs` consider:
             - epochs: int
             - sample_weight: np.ndarray
             
-            # TODO: handle weights
+            See https://www.tensorflow.org/api_docs/python/tf/keras/Model#fit
+            
         """
-        assert history.get_fixed( "history_type" ) == 'pov'
+        if gameHistory.get_fixed( "history_type" ) == 'pov':
+            ...
+        #
+        elif gameHistory.get_fixed( "history_type" ) == 'literal':
+            gameHistory = history.povHistory_from_literalHistory(
+                gameHistory
+            )
+        #
+        else:
+            raise Exception(
+                "Unrecognized gameHistory.keys()={}".format(
+                    gameHistory.keys()
+                )
+            )
+        #
         
         # Prep history
         history_prepped: jable.JyFrame = self.prep_training_history(
-            history
+            gameHistory
         )
         
         X: np.ndarray = np.array(

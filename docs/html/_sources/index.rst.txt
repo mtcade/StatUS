@@ -8,6 +8,8 @@ Welcome to StatUS's documentation!
 
 StatUS is a tool for the loop of training AI, and running them through "games" to generate data to train better and better AI.
 
+Check the quickstart guides at `https://github.com/mtcade/StatUS <https://github.com/mtcade/StatUS/>`_
+
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
@@ -15,6 +17,7 @@ StatUS is a tool for the loop of training AI, and running them through "games" t
    engine
    aiPlayer
    autoPlayer
+   history
    
 
 
