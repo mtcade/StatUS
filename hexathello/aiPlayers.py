@@ -40,6 +40,7 @@ class HexAgent():
         ai_id: str = '',
         hexagonGridHelper: engine.HexagonGridHelper | None = None
         ) -> None:
+        #
         self.size = size
         self.player_count = player_count
         self.p_random = p_random

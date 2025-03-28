@@ -1,0 +1,21 @@
+autoPlayer
+###########
+
+.. autofunction:: hexathello.autoPlayer.runHexathello_withAgents
+
+Histories
+**********
+
+Histories are of the `JyFrame` class, used to keep track of the board state, player actions, and other information needed to reconstruct a game and use it for training AI.
+
+When saving, some of the `numpy.ndarray` values for board states, move choices, and player actions get encoded as `int`. ``hexathello.autoPlayer.history_asInt()`` encodes before saving, and ``hexathello.autoPlayer.history_fromInt()`` decodes.
+
+.. autofunction:: hexathello.autoPlayer.new_literalHistory
+
+.. autofunction:: hexathello.autoPlayer.new_povHistory
+
+.. autofunction:: hexathello.autoPlayer.povHistory_from_literalHistory
+
+.. autofunction:: hexathello.autoPlayer.history_asInt
+
+.. autofunction:: hexathello.autoPlayer.history_fromInt

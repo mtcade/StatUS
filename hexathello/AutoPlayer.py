@@ -55,6 +55,10 @@ def get_relativeStateVector(
     player_count: int
     ) -> np.ndarray:
     """
+        :param np.ndarray boardState_vector: Literal board state, with each `player_count`-tuple indexed by `player_id`
+        :param int player_id: Player from whom to make the PoV from
+        :param int player_count: Number of players in game
+        
         Convert a board state to be from the point of view of the given player; if they own a spot, the 0th index in the player_count tuple will be 1.
     """
     assert player_id < player_count
@@ -88,10 +92,16 @@ def new_literalHistory(
     player_count: int,
     size: int,
     winner: int | None = None,
-    scores: list[ int ] = [],
-    history_type: Literal['literal'] = 'literal'
+    scores: list[ int ] = []
     ) -> jable.JyFrame:
-    
+    """
+        :param int player_count: Number of players
+        :param int size: Size of one side of the hex board
+        :param int|None winner: Which player_id won the game. `None` if a tie.
+        :param list[ int ] scores: Final score at the end of the game.
+        :returns: Empty history table with "history_type" = 'literal'
+        :rtype: jable.JyFrame
+    """
     if scores == []:
         # Default: inner ring divided by players
         scores = [ 6//player_count ]*player_count
@@ -101,7 +111,7 @@ def new_literalHistory(
         fixed = {
             "player_count": player_count,
             "size": size,
-            "history_type": history_type,
+            "history_type": 'literal',
             "winner": winner,
             "scores": scores
         },
@@ -125,10 +135,14 @@ def new_literalHistory(
 
 def new_povHistory(
     player_count: int,
-    size: int,
-    history_type: Literal['pov'] = 'pov'
+    size: int
     ) -> jable.JyFrame:
     """
+        :param int player_count: Number of players
+        :param int size: Size of one side of the hex board
+        :returns: Empty history table with "history_type" = 'pov'
+        :rtype: jable.JyFrame
+        
         Like literal history, but the winner and scores will change to reflect the pov player, assumed to be 0. "current_player" gets preserved in case we want to go back to literal
     """
     
@@ -136,7 +150,7 @@ def new_povHistory(
         fixed = {
             "player_count": player_count,
             "size": size,
-            "history_type": history_type
+            "history_type": 'pov'
         },
         shiftHeader = [
             "turn_index",
@@ -162,6 +176,10 @@ def povHistory_from_literalHistory(
     literalHistory: jable.JyFrame
     ) -> jable.JyFrame:
     """
+        :param jable.JyFrame literalHistory: Literal history, with the board state and choice indexed by player_id
+        :returns: JyFrame with everything shifted from the point of view of the player making the move
+        :rtype: jable.JyFrame
+        
         Shift to make as if each move were from player 0's point of view. Shifts:
         
             - scores
@@ -169,8 +187,6 @@ def povHistory_from_literalHistory(
             - winner
            
         Preserves "current_player". "player_action" needn't change since it's a choice of literal space
-        
-        
         
         And gives 'history_type' = 'pov'
     """
@@ -249,7 +265,11 @@ def history_asInt(
     history: jable.JyFrame
     ) -> jable.JyFrame:
     """
-        Encode the "board_state" and "player_action" as integers
+        :param jable.JyFrame history:
+        :returns: Decoded JyFrame with binary np.ndarray columns
+        :rtype: jable.JyFrame
+        
+        Encode the "board_state", "action_choices", and "player_action" as integers from binary np.ndarrays
     """
     
     history_out: jable.JyFrame = jable.likeJyFrame(
@@ -288,7 +308,11 @@ def history_fromInt(
     history: jable.JyFrame
     ) -> jable.JyFrame:
     """
-        Decode the "board_state" and "player_action" into numpy arrays
+        :param jable.JyFrame history:
+        :returns: History, encoding turning appropriate columns into np.ndarrays
+        :rtype: jable.JyFrame
+        
+        Decode the "board_state", "action_choices", "player_action" columns into binary np.ndarrays
     """
     
     history_out: jable.JyFrame = jable.likeJyFrame(
@@ -339,11 +363,15 @@ def runHexathello_withAgents(
     hexagonGridHelper: engine.HexagonGridHelper | None = None
     ) -> jable.JyFrame:
     """
+        :param list[ AiAgentProcol ] agents: Initialized list of ai agents from ``aiPlayers``
+        :param int size: Length of one side of the hexagon board
+        :param int logging_level: Passed to the hexathello engine for how much detail to log
+        :param np.random.Generator rng: Used to make various decisions both for the game and AI agents
+        :param engine.HexagonGridHelper hexagonGridHelper: Used to help with calculations for both the engine and AI agents
+        :returns: The literal history
+        :rtype: jable.JyFrame
+        
         Plays a game with set AI and prints everything as it goes
-        
-        agents: An initialized set of agents to play
-        
-        Returns the history as a JyFrame
         
         fixed:
             player_count: int
@@ -354,6 +382,7 @@ def runHexathello_withAgents(
             turn_index: int
             current_player: int
             boardState: np.ndarray
+            actionChoices: np.ndarray
             player_action: np.ndarray
     """
     from copy import deepcopy

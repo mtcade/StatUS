@@ -1,0 +1,4 @@
+aiPlayers
+##########
+
+AI Players have a common interface for playing Hexathello.

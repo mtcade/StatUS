@@ -6,9 +6,16 @@
 Welcome to StatUS's documentation!
 ==================================
 
+StatUS is a tool for the loop of training AI, and running them through "games" to generate data to train better and better AI.
+
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
+   
+   engine
+   aiPlayer
+   autoPlayer
+   
 
 
 
