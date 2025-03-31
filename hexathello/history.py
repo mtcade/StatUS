@@ -60,7 +60,7 @@
             * action_tags: `list[ str ]`
 """
 
-from . import jable
+from . import engine, jable
 
 import numpy as np
 
@@ -228,6 +228,7 @@ def povHistory_from_literalHistory(
         if True:
             povHistory.append(
                 row | {
+                    "history_type": 'pov',
                     "board_state": get_relativeStateVector(
                         row["board_state"],
                         player_id = row["current_player"],

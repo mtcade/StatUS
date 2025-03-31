@@ -122,8 +122,7 @@ def runHexathello_withAgents(
         player_count = player_count,
         size = size,
         winner = None,
-        scores = deepcopy( hexathello.status["scores"] ),
-        history_type = 'literal'
+        scores = deepcopy( hexathello.status["scores"] )
     )
     
     # SAFETY VALVE: max number of turns is empty_count

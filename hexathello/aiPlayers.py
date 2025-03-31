@@ -307,16 +307,26 @@ class KerasHexAgent( HexAgent ):
             :returns: A full history to be used as training data, with desired outcome as the "player_action" and input "boardState"
             :rtype: jable.JyFrame
             
-            Turn game_history into something we can actually learn from. Subclasses can use other methods of filtering or adding new columns like "weight"
+            Turn game_history into something we can actually learn from. Subclasses can use other methods of filtering or setting "sample_weight"
             
-            The default behavior is to learn only from winning moves and ignore others, by filtering by `{"winner": 0}`
+            The default behavior is to apply a sample weight of `1.0` to moves leading to winning games, `-1.0` to moves leading to a losing game, and `0.0` for ties
         """
         assert game_history.get_fixed( "history_type" ) == 'pov'
         
-        return jable.filter(
-            game_history,
-            {'winner': 0}
+        # Get sample_weights
+        sample_weight: list[ float ] = [
+            1.0 if row["winner"] == 0 else 0.0 if row["winner"] is None else -1.0
+                for row in game_history
+        ]
+        
+        history_prepped: JyFrame = jable.copyJyFrame( game_history )
+        history_prepped.addColumn(
+            col = "sample_weight",
+            values = sample_weight,
+            dtype = float
         )
+        
+        return history_prepped
     #/def prep_training_history
     
     def train(
@@ -444,7 +454,8 @@ class GreedyHexAgent( HexAgent ):
             ) == 0:
                 # Did not roll ranndom
                 qr = _greedy_play(
-                    moveChoiceDict
+                    moveChoiceDict,
+                    rng = rng
                 )
                 action_tags.append('greedy')
             #
