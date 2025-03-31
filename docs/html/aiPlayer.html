@@ -136,8 +136,8 @@
 <dd class="field-odd"><p>jable.JyFrame</p>
 </dd>
 </dl>
-<p>Turn game_history into something we can actually learn from. Subclasses can use other methods of filtering or adding new columns like “weight”</p>
-<p>The default behavior is to learn only from winning moves and ignore others, by filtering by <cite>{“winner”: 0}</cite></p>
+<p>Turn game_history into something we can actually learn from. Subclasses can use other methods of filtering or setting “sample_weight”</p>
+<p>The default behavior is to apply a sample weight of <cite>1.0</cite> to moves leading to winning games, <cite>-1/{game_spaces}</cite> to moves leading to a losing game, and <cite>0.0</cite> for ties</p>
 </dd></dl>
 
 <dl class="py method">

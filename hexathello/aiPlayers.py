@@ -309,13 +309,14 @@ class KerasHexAgent( HexAgent ):
             
             Turn game_history into something we can actually learn from. Subclasses can use other methods of filtering or setting "sample_weight"
             
-            The default behavior is to apply a sample weight of `1.0` to moves leading to winning games, `-1.0` to moves leading to a losing game, and `0.0` for ties
+            The default behavior is to apply a sample weight of `1.0` to moves leading to winning games, `-1/{game_spaces}` to moves leading to a losing game, and `0.0` for ties
         """
         assert game_history.get_fixed( "history_type" ) == 'pov'
         
         # Get sample_weights
+        loss_weight: float = -1/len( game_history[0,"player_action"] )
         sample_weight: list[ float ] = [
-            1.0 if row["winner"] == 0 else 0.0 if row["winner"] is None else -1.0
+            1.0 if row["winner"] == 0 else 0.0 if row["winner"] is None else loss_weight
                 for row in game_history
         ]
         
@@ -380,7 +381,9 @@ class KerasHexAgent( HexAgent ):
         )
         
         if "sample_weight" in history_prepped.keys() and "sample_weight" not in kwargs:
-            kwargs["sample_weight"] = history_prepped["sample_weight"]
+            kwargs["sample_weight"] = np.array(
+                history_prepped["sample_weight"]
+            )
         #
         
         self.brain.fit( X, y, *args, **kwargs )

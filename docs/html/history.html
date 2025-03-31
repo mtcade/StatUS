@@ -183,6 +183,23 @@
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="hexathello.history.history_fromInt">
+<span class="sig-prename descclassname"><span class="pre">hexathello.history.</span></span><span class="sig-name descname"><span class="pre">history_fromInt</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">history</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">JyFrame</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">JyFrame</span></span></span><a class="headerlink" href="#hexathello.history.history_fromInt" title="Link to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>history</strong> (<em>jable.JyFrame</em>)</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>History, encoding turning appropriate columns into np.ndarrays</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>jable.JyFrame</p>
+</dd>
+</dl>
+<p>Decode the “board_state”, “action_choices”, “player_action” columns into binary np.ndarrays</p>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="hexathello.history.new_literalHistory">
 <span class="sig-prename descclassname"><span class="pre">hexathello.history.</span></span><span class="sig-name descname"><span class="pre">new_literalHistory</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">player_count</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">winner</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scores</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">[]</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">JyFrame</span></span></span><a class="headerlink" href="#hexathello.history.new_literalHistory" title="Link to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
@@ -275,6 +292,7 @@
 <li class="toctree-l1"><a class="reference internal" href="autoPlayer.html">autoPlayer</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">History</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#hexathello.history.history_asInt"><code class="docutils literal notranslate"><span class="pre">history_asInt()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#hexathello.history.history_fromInt"><code class="docutils literal notranslate"><span class="pre">history_fromInt()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#hexathello.history.new_literalHistory"><code class="docutils literal notranslate"><span class="pre">new_literalHistory()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#hexathello.history.new_povHistory"><code class="docutils literal notranslate"><span class="pre">new_povHistory()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#hexathello.history.povHistory_from_literalHistory"><code class="docutils literal notranslate"><span class="pre">povHistory_from_literalHistory()</span></code></a></li>
