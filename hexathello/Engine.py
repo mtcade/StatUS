@@ -1,14 +1,5 @@
 """
-    Holds the state of the world with updates and internal dynamics, by the loop:
-    
-    world: Simulator
-    for update in updates:
-        world.queueUpdate( update: dict )
-    #
-    world.applyUpdates()
-    
-    status: dict = work.getStatus( request: dict )
-    
+    The Hexathello Engine enforces the rules of the game. autoPlayer contains an interface for getting AI agents to play it. The `game` interface allows it to be used for a human interactable app, with interface and events.
 """
 from . import jable
 
@@ -46,6 +37,7 @@ class PlayerMove( TypedDict ):
     q: int
     r: int
     owner: int
+    action_tags: list[ str ]
 #/class PlayerMove
 
 # Simple 2-d hex coordinate

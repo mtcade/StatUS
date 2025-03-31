@@ -1,16 +1,5 @@
 History
 ########
 
-Histories are of the `JyFrame` class, used to keep track of the board state, player actions, and other information needed to reconstruct a game and use it for training AI.
-
-When saving, some of the `numpy.ndarray` values for board states, move choices, and player actions get encoded as `int`. ``hexathello.autoPlayer.history_asInt()`` encodes before saving, and ``hexathello.autoPlayer.history_fromInt()`` decodes.
-
-.. autofunction:: hexathello.history.new_literalHistory
-
-.. autofunction:: hexathello.history.new_povHistory
-
-.. autofunction:: hexathello.history.povHistory_from_literalHistory
-
-.. autofunction:: hexathello.history.history_asInt
-
-.. autofunction:: hexathello.history.history_fromInt
+.. automodule:: hexathello.history
+    :members: new_literalHistory, new_povHistory, povHistory_from_literalHistory, history_asInt, history.history_fromInt

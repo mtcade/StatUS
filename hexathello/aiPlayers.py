@@ -1,5 +1,7 @@
 """
-    Interface for AI agents to play hexathello
+    Interface for AI agents to play hexathello. They can play against eachother or humans.
+    
+    Using ``hexathello.autoPlayer.runHexathello_withAgents()``, we have them play games with eachother to generate data on good moves, by saving it as a history, as from ``hexathello.history.new_literalHistory()``. Agents can use this data to learn, likely with ``KerasHexAgent()`` to use `tensorflow.keras` for neural network decision making.
 """
 
 from . import engine, history, jable
@@ -29,7 +31,14 @@ class PredictionModel( Protocol ):
 
 class HexAgent():
     """
-        Semi Abstract parent class for Agents which play Hexathello
+        :param int size: Length of one side of the hexathello board
+        :param int player_count: Number of players. Likely 2, 3, or 6 for hexathello
+        :param float p_random: Probability of choosing randomly from among legal moves. Used to occasionally experiment.
+        :param int|None player_id: Index of AI player, if in a game. Used to convert board states to a self pov.
+        :param str ai_id: A name for the agent, for indexing, storage, and learning purposes.
+        :param engine.HexagonGridHelper|None hexagonGridHelper: Instance of a game's helper for convering between indices of board states and qr tuple coordiates.
+        
+        Semi Abstract parent class for Agents which play hexathello, most likely from ``hexathello.autoPlayer.runHexathello_withAgents()`` or against a human in ``hexathello.game``
     """
     def __init__(
         self: Self,
@@ -59,6 +68,14 @@ class HexAgent():
         rng: np.random.Generator,
         potential_moves: list[ engine.CellCapture ] = []
         ) -> engine.PlayerMove:
+        """
+            :param engine.BoardState boardState: A dictionary mapping `(q,r)` tuples to board state dictionaries
+            :param int turn_index: Turn when move was made, starting at 0.
+            :param np.random.Generator rng: Random number generator instance for making some choices.
+            :potential_moves: list of dictionaries of legal moves, mapped to captures which would be made. If not present, calculate using ``hexathello.engine.getMoves_forPlayer()``.
+            :returns: A choice of move
+            :rtype: engine.PlayerMove
+        """
         raise NotImplementedError
     #/def getMove_fromBoardState
 #/class HexAgent
@@ -110,7 +127,7 @@ def _greedy_play(
 
 class KerasHexAgent( HexAgent ):
     """
-        Uses a tensorflow keras network to make decisions, via a PredictionModel, most likely a trained neural net
+        Uses a tensorflow keras network to make decisions, via a PredictionModel, most likely a compiled neural network. This class can handle training the network, stored in `.brain` using `.train()`.
     """
     def __init__(
         self: Self,
@@ -147,11 +164,14 @@ class KerasHexAgent( HexAgent ):
         rng: np.random.Generator
         ) -> int:
         """
-            Get the index of a choice by one way or another
-            Different implementations might use max, or soft max among those
-                positive
+            :param np.ndarray moveChoice_vector: Numpy array of length equal to the number of spaces on the board. It's a list of weights, where it must be `<=0.0` for illegal moves.
+            :param np.random.Generator rng: Random number generator which may be used
+            :returns: Index of move choice
+            :rtype: int
+            
+            Get the index of a choice by one way or another. Different implementations might use max, or soft max among those positive. Use ``hexathello.engine.HexagonGridHelper`` to turn it back to a `(q,r)` tuple.
                 
-            This is the default implementation where we choose the max
+            Default implementation is `np.argmax( moveChoice_vector)`.
         """
         return np.argmax( moveChoice_vector )
     #/def chooseMove
@@ -174,12 +194,6 @@ class KerasHexAgent( HexAgent ):
         )
     #/def getBoardState_asRelativeStateVector
     
-    def getMove_fromBoardState_classDecision(
-        self: Self
-        ):
-        raise Exception("UC")
-    #/def getMove_fromBoardState_classDecision
-    
     def getMove_fromBoardState(
         self: Self,
         boardState: engine.BoardState,
@@ -187,6 +201,13 @@ class KerasHexAgent( HexAgent ):
         rng: np.random.Generator,
         potential_moves: list[ engine.CellCapture ] = []
         ) -> engine.PlayerMove:
+        """
+            :param np.ndarray moveChoice_vector: Numpy array of length equal to the number of spaces on the board. It's a list of weights, where it must be `<=0.0` for illegal moves.
+            :param int turn_index: Current turn, used to turn boardState to pov via `.get_relativeStateVector()` if necessary
+            :param np.random.Generator rng: Random number generator which may be used
+            :returns: Dictionary of the chosen move
+            :rtype: engine.PlayerMove
+        """
         #
         assert self.player_id is not None
         moveChoiceDict: engine.MoveChoiceDict = engine.getMoves_forPlayer(
@@ -196,8 +217,10 @@ class KerasHexAgent( HexAgent ):
         )
         
         qr: engine.QRTuple
+        action_tags: list[ str ] = []
         if len( moveChoiceDict ) == 1:
             qr = next( _qr for _qr in moveChoiceDict.keys() )
+            action_tags.append('forced')
         #
         # Check if random play
         elif self.p_random >= 1:
@@ -206,6 +229,7 @@ class KerasHexAgent( HexAgent ):
                 moveChoiceDict,
                 rng = rng
             )
+            action_tags.append('random')
         #
         else:
             # Roll for random or regular decision
@@ -253,6 +277,7 @@ class KerasHexAgent( HexAgent ):
                 ]
                 
                 assert qr in moveChoiceDict
+                action_tags.append('brain')
             #
             else:
                 # Rolled random
@@ -260,6 +285,7 @@ class KerasHexAgent( HexAgent ):
                     moveChoiceDict,
                     rng = rng
                 )
+                action_tags.append('random')
             #/if { nonrandom }/else
         #/if len( moveChoiceDict ) == 1/switch { random }
         
@@ -267,39 +293,44 @@ class KerasHexAgent( HexAgent ):
             "turn_index": turn_index,
             "q": qr[0],
             "r": qr[1],
-            "owner": self.player_id
+            "owner": self.player_id,
+            "action_tags": action_tags
         }
     #/def getMove_fromBoardState
     
     def prep_training_history(
         self: Self,
-        gameHistory: jable.JyFrame
+        game_history: jable.JyFrame
         ) -> jable.JyFrame:
         """
-            Turn gameHistory into something we can actually learn from
+            :param jable.JyFrame game_history: A history already transformed to pov. See :doc:`history`
+            :returns: A full history to be used as training data, with desired outcome as the "player_action" and input "boardState"
+            :rtype: jable.JyFrame
             
-            The default behavior is to learn only from winning moves and ignore others
+            Turn game_history into something we can actually learn from. Subclasses can use other methods of filtering or adding new columns like "weight"
+            
+            The default behavior is to learn only from winning moves and ignore others, by filtering by `{"winner": 0}`
         """
-        assert gameHistory.get_fixed( "history_type" ) == 'pov'
+        assert game_history.get_fixed( "history_type" ) == 'pov'
         
         return jable.filter(
-            gameHistory,
+            game_history,
             {'winner': 0}
         )
     #/def prep_training_history
     
     def train(
         self: Self,
-        gameHistory: jable.JyFrame,
+        game_history: jable.JyFrame,
         *args,
         **kwargs
         ) -> None:
         """
-            :param jable.JyFrame gameHistory: A literal or pov set of histories
+            :param jable.JyFrame game_history: A literal or pov set of histories
             :param list args: Args passed to ``self.brain.fit()``
             :param dict kwargs: Key word args passed to ``self.brain.fit()``
             
-            Train the brain with a Pov History JyFrame
+            Train the brain with a Pov History JyFrame; see :doc:`history`. If "sample_weight" is a column with `float` values after running `.prep_training_history()`, it gets used as "sample_weight", unless it's provided as a `kwarg`.
             
             For `args` and `kwargs` consider:
             - epochs: int
@@ -308,25 +339,26 @@ class KerasHexAgent( HexAgent ):
             See https://www.tensorflow.org/api_docs/python/tf/keras/Model#fit
             
         """
-        if gameHistory.get_fixed( "history_type" ) == 'pov':
+        
+        if game_history.get_fixed( "history_type" ) == 'pov':
             ...
         #
-        elif gameHistory.get_fixed( "history_type" ) == 'literal':
-            gameHistory = history.povHistory_from_literalHistory(
-                gameHistory
+        elif game_history.get_fixed( "history_type" ) == 'literal':
+            game_history = history.povHistory_from_literalHistory(
+                game_history
             )
         #
         else:
             raise Exception(
-                "Unrecognized gameHistory.keys()={}".format(
-                    gameHistory.keys()
+                "Unrecognized game_history.keys()={}".format(
+                    game_history.keys()
                 )
             )
         #
         
         # Prep history
         history_prepped: jable.JyFrame = self.prep_training_history(
-            gameHistory
+            game_history
         )
         
         X: np.ndarray = np.array(
@@ -337,6 +369,10 @@ class KerasHexAgent( HexAgent ):
             history_prepped[ "player_action" ]
         )
         
+        if "sample_weight" in history_prepped.keys() and "sample_weight" not in kwargs:
+            kwargs["sample_weight"] = history_prepped["sample_weight"]
+        #
+        
         self.brain.fit( X, y, *args, **kwargs )
         
         return
@@ -345,7 +381,7 @@ class KerasHexAgent( HexAgent ):
 
 class GreedyHexAgent( HexAgent ):
     """
-        Picks randomly from among moves which give the most immediate captures
+        Picks randomly from among moves which give the most immediate captures. You likely will not subclass `GreedyHexAgent`. Initialize with `p_random = 1.0` for a fully random agent; set it somewhere `0.0 < p_random < 1.0` for sometimes random sometimes greedy choices; this is good for beginner AIs and for generating a lot of move data to bootstrap the ``KerasHexAgent`` training process.
     """
     def __init__(
         self: Self,
@@ -367,12 +403,6 @@ class GreedyHexAgent( HexAgent ):
         return
     #/def __init__
     
-    def getMove_fromBoardState_classDecision(
-        self: Self
-        ):
-        raise Exception("UC")
-    #/def getMove_fromBoardState_classDecision
-    
     def getMove_fromBoardState(
         self: Self,
         boardState: engine.BoardState,
@@ -391,9 +421,11 @@ class GreedyHexAgent( HexAgent ):
         )
 
         qr: engine.QRTuple
+        action_tags: list[ str ] = []
         # Check if only one option
         if len( moveChoiceDict ) == 1:
             qr = next( _qr for _qr in moveChoiceDict.keys() )
+            action_tags.append('forced')
         #
         # Check if random play
         elif self.p_random >= 1:
@@ -402,6 +434,7 @@ class GreedyHexAgent( HexAgent ):
                 moveChoiceDict,
                 rng = rng
             )
+            action_tags.append('random')
         #
         else:
             # Roll for random or regular decision
@@ -413,6 +446,7 @@ class GreedyHexAgent( HexAgent ):
                 qr = _greedy_play(
                     moveChoiceDict
                 )
+                action_tags.append('greedy')
             #
             else:
                 # Rolled random
@@ -420,6 +454,7 @@ class GreedyHexAgent( HexAgent ):
                     moveChoiceDict,
                     rng = rng
                 )
+                action_tags.append('random')
             #/if { nonrandom }/else
         #/if len( moveChoiceDict ) == 1/switch { random }
         
@@ -427,7 +462,8 @@ class GreedyHexAgent( HexAgent ):
             "turn_index": turn_index,
             "q": qr[0],
             "r": qr[1],
-            "owner": self.player_id
+            "owner": self.player_id,
+            "action_tags": action_tags
         }
     #/def getMove_fromBoardState
 #/class GreedyHexAgent( HexAgent )

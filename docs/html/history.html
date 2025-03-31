@@ -31,10 +31,157 @@
 
           <div class="body" role="main">
             
-  <section id="history">
-<h1>History<a class="headerlink" href="#history" title="Link to this heading">¶</a></h1>
-<p>Histories are of the <cite>JyFrame</cite> class, used to keep track of the board state, player actions, and other information needed to reconstruct a game and use it for training AI.</p>
-<p>When saving, some of the <cite>numpy.ndarray</cite> values for board states, move choices, and player actions get encoded as <cite>int</cite>. <code class="docutils literal notranslate"><span class="pre">hexathello.autoPlayer.history_asInt()</span></code> encodes before saving, and <code class="docutils literal notranslate"><span class="pre">hexathello.autoPlayer.history_fromInt()</span></code> decodes.</p>
+  <section id="module-hexathello.history">
+<span id="history"></span><h1>History<a class="headerlink" href="#module-hexathello.history" title="Link to this heading">¶</a></h1>
+<p>History is a type of <cite>jable.JyFrame</cite> which records the actions taken in a game. The most common source is <code class="docutils literal notranslate"><span class="pre">hexathello.autoPlayer.runHexathello_withAgents()</span></code>, often saved to disk.</p>
+<p>This is the fundamental data used to train AI agents from <code class="docutils literal notranslate"><span class="pre">hexathello.aiPlayers</span></code>, primarily the <code class="docutils literal notranslate"><span class="pre">hexathello.aiPlayers.KerasHexAgent</span></code> class and subclasses.</p>
+<p>See the <cite>PyJable</cite> package: [<a class="reference external" href="https://mtcade.github.io/Jable/html/index.html](https://mtcade.github.io/Jable/html/index.html">https://mtcade.github.io/Jable/html/index.html](https://mtcade.github.io/Jable/html/index.html</a>), notably the <cite>PyJable.jable.JyFrame</cite> class.</p>
+<p>There are three kinds of history tables:</p>
+<ul class="simple">
+<li><dl class="simple">
+<dt>Literal: <cite>table.get_fixed[“history_type”] = ‘literal’</cite>. Indexes each player from 0 to the number of players minus one. The board state is a <cite>numpy.ndarray</cite> of <cite>0.0</cite> and <cite>1.0</cite> of concatentated <cite>player_count</cite> tuples, indexed by which player owns that spot. For indexing a linear index to hexagon (q,r) coordinates and back, see the <code class="docutils literal notranslate"><span class="pre">hexathello.engine.HexagonGridHelper</span></code> class.</dt><dd><ul>
+<li><dl class="simple">
+<dt>Fixed Keys</dt><dd><ul>
+<li><p>player_count: <cite>int</cite></p></li>
+<li><p>size: <cite>int</cite></p></li>
+<li><p>history_type: <cite>Literal[‘pov’]</cite></p></li>
+<li><p>winner: <cite>int|None</cite></p></li>
+<li><p>scores: <cite>list[ int ]</cite></p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>Shift Keys</dt><dd><ul>
+<li><p>turn_index: <cite>int</cite></p></li>
+<li><p>current_player: <cite>int</cite></p></li>
+<li><p>board_state <cite>numpy.ndarray</cite></p></li>
+<li><p>action_choices: <cite>numpy.ndarray</cite></p></li>
+<li><p>player_action: <cite>numpy.ndarray</cite></p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>Shift Index Keys</dt><dd><ul>
+<li><p>ai_id: <cite>str</cite></p></li>
+<li><p>action_tags: <cite>list[ str ]</cite></p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>Point of View: <cite>table.get_fixed[“history_type”] = ‘pov’</cite>. At each turn, indexes each tuple in <cite>board_state</cite> with the player whose turn it is rather than their numeric id.</dt><dd><ul>
+<li><dl class="simple">
+<dt>Fixed Keys</dt><dd><ul>
+<li><p>player_count: <cite>int</cite></p></li>
+<li><p>size: <cite>int</cite></p></li>
+<li><p>history_type: <cite>Literal[‘pov’]</cite></p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>Shift Keys</dt><dd><ul>
+<li><p>turn_index: <cite>int</cite></p></li>
+<li><p>current_player: <cite>int</cite></p></li>
+<li><p>board_state <cite>numpy.ndarray</cite></p></li>
+<li><p>action_choices: <cite>numpy.ndarray</cite></p></li>
+<li><p>player_action: <cite>numpy.ndarray</cite></p></li>
+<li><p>winner: <cite>int|None</cite></p></li>
+<li><p>scores: <cite>list[ int ]</cite></p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>Shift Index Keys</dt><dd><ul>
+<li><p>ai_id <cite>str</cite></p></li>
+<li><p>action_tags: <cite>list[ str ]</cite></p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>Disk: encodes the binary vectors of a pov table as integers. To decode, pad with the appropriate number of zeroes on the left; vector length can be inferred from <cite>board_size</cite> and <cite>player_count</cite>.</dt><dd><ul>
+<li><dl class="simple">
+<dt>Fixed Keys</dt><dd><ul>
+<li><p>player_count: <cite>int</cite></p></li>
+<li><p>size: <cite>int</cite></p></li>
+<li><p>history_type: <cite>Literal[‘literal’]</cite></p></li>
+<li><p>winner: <cite>int|None</cite></p></li>
+<li><p>scores: <cite>list[ int ]</cite></p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>Shift Keys</dt><dd><ul>
+<li><p>turn_index: <cite>int</cite></p></li>
+<li><p>current_player: <cite>int</cite></p></li>
+<li><dl class="simple">
+<dt>board_state <cite>int</cite></dt><dd><ul>
+<li><p><cite>= _state_asInt( np.ndarray )</cite></p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>action_choices: <cite>int</cite></dt><dd><ul>
+<li><p><cite>= _state_asInt( np.ndarray )</cite></p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>player_action: <cite>int</cite></dt><dd><ul>
+<li><p><cite>= _state_asInt( np.ndarray )</cite></p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>Shift Index Keys</dt><dd><ul>
+<li><p>ai_id: <cite>str</cite></p></li>
+<li><p>action_tags: <cite>list[ str ]</cite></p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+<dl class="py function">
+<dt class="sig sig-object py" id="hexathello.history.history_asInt">
+<span class="sig-prename descclassname"><span class="pre">hexathello.history.</span></span><span class="sig-name descname"><span class="pre">history_asInt</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">history</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">JyFrame</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">JyFrame</span></span></span><a class="headerlink" href="#hexathello.history.history_asInt" title="Link to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>history</strong> (<em>jable.JyFrame</em>)</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Decoded JyFrame with binary np.ndarray columns</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>jable.JyFrame</p>
+</dd>
+</dl>
+<p>Encode the “board_state”, “action_choices”, and “player_action” as integers from binary np.ndarrays, making a ‘disk’ history.</p>
+</dd></dl>
+
 <dl class="py function">
 <dt class="sig sig-object py" id="hexathello.history.new_literalHistory">
 <span class="sig-prename descclassname"><span class="pre">hexathello.history.</span></span><span class="sig-name descname"><span class="pre">new_literalHistory</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">player_count</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">winner</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scores</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">[]</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">JyFrame</span></span></span><a class="headerlink" href="#hexathello.history.new_literalHistory" title="Link to this definition">¶</a></dt>
@@ -102,40 +249,6 @@
 <p>And gives ‘history_type’ = ‘pov’</p>
 </dd></dl>
 
-<dl class="py function">
-<dt class="sig sig-object py" id="hexathello.history.history_asInt">
-<span class="sig-prename descclassname"><span class="pre">hexathello.history.</span></span><span class="sig-name descname"><span class="pre">history_asInt</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">history</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">JyFrame</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">JyFrame</span></span></span><a class="headerlink" href="#hexathello.history.history_asInt" title="Link to this definition">¶</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>history</strong> (<em>jable.JyFrame</em>)</p>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Decoded JyFrame with binary np.ndarray columns</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>jable.JyFrame</p>
-</dd>
-</dl>
-<p>Encode the “board_state”, “action_choices”, and “player_action” as integers from binary np.ndarrays</p>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="hexathello.history.history_fromInt">
-<span class="sig-prename descclassname"><span class="pre">hexathello.history.</span></span><span class="sig-name descname"><span class="pre">history_fromInt</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">history</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">JyFrame</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">JyFrame</span></span></span><a class="headerlink" href="#hexathello.history.history_fromInt" title="Link to this definition">¶</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>history</strong> (<em>jable.JyFrame</em>)</p>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>History, encoding turning appropriate columns into np.ndarrays</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>jable.JyFrame</p>
-</dd>
-</dl>
-<p>Decode the “board_state”, “action_choices”, “player_action” columns into binary np.ndarrays</p>
-</dd></dl>
-
 </section>
 
 
@@ -161,11 +274,10 @@
 <li class="toctree-l1"><a class="reference internal" href="aiPlayer.html">aiPlayers</a></li>
 <li class="toctree-l1"><a class="reference internal" href="autoPlayer.html">autoPlayer</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">History</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#hexathello.history.history_asInt"><code class="docutils literal notranslate"><span class="pre">history_asInt()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#hexathello.history.new_literalHistory"><code class="docutils literal notranslate"><span class="pre">new_literalHistory()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#hexathello.history.new_povHistory"><code class="docutils literal notranslate"><span class="pre">new_povHistory()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#hexathello.history.povHistory_from_literalHistory"><code class="docutils literal notranslate"><span class="pre">povHistory_from_literalHistory()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="#hexathello.history.history_asInt"><code class="docutils literal notranslate"><span class="pre">history_asInt()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="#hexathello.history.history_fromInt"><code class="docutils literal notranslate"><span class="pre">history_fromInt()</span></code></a></li>
 </ul>
 </li>
 </ul>

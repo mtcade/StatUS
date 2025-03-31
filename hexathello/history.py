@@ -1,7 +1,63 @@
 """
-    History is a type of `jable.JyFrame` which records the actions taken in a game. The most common source is `autoPlayer.runHexathello_withAgents(...)`, often saved to disk.
+    History is a type of `jable.JyFrame` which records the actions taken in a game. The most common source is ``hexathello.autoPlayer.runHexathello_withAgents()``, often saved to disk.
     
-    This is the fundamental data used to train AI agents from `aiPlayers`.
+    This is the fundamental data used to train AI agents from ``hexathello.aiPlayers``, primarily the ``hexathello.aiPlayers.KerasHexAgent`` class and subclasses.
+    
+    See the `PyJable` package: [https://mtcade.github.io/Jable/html/index.html](https://mtcade.github.io/Jable/html/index.html), notably the `PyJable.jable.JyFrame` class.
+    
+    There are three kinds of history tables:
+    
+    * Literal: `table.get_fixed["history_type"] = 'literal'`. Indexes each player from 0 to the number of players minus one. The board state is a `numpy.ndarray` of `0.0` and `1.0` of concatentated `player_count` tuples, indexed by which player owns that spot. For indexing a linear index to hexagon (q,r) coordinates and back, see the ``hexathello.engine.HexagonGridHelper`` class.
+        * Fixed Keys
+            * player_count: `int`
+            * size: `int`
+            * history_type: `Literal['pov']`
+            * winner: `int|None`
+            * scores: `list[ int ]`
+        * Shift Keys
+            * turn_index: `int`
+            * current_player: `int`
+            * board_state `numpy.ndarray`
+            * action_choices: `numpy.ndarray`
+            * player_action: `numpy.ndarray`
+        * Shift Index Keys
+            * ai_id: `str`
+            * action_tags: `list[ str ]`
+    * Point of View: `table.get_fixed["history_type"] = 'pov'`. At each turn, indexes each tuple in `board_state` with the player whose turn it is rather than their numeric id.
+        * Fixed Keys
+            * player_count: `int`
+            * size: `int`
+            * history_type: `Literal['pov']`
+        * Shift Keys
+            * turn_index: `int`
+            * current_player: `int`
+            * board_state `numpy.ndarray`
+            * action_choices: `numpy.ndarray`
+            * player_action: `numpy.ndarray`
+            * winner: `int|None`
+            * scores: `list[ int ]`
+        * Shift Index Keys
+            * ai_id `str`
+            * action_tags: `list[ str ]`
+    * Disk: encodes the binary vectors of a pov table as integers. To decode, pad with the appropriate number of zeroes on the left; vector length can be inferred from `board_size` and `player_count`.
+        * Fixed Keys
+            * player_count: `int`
+            * size: `int`
+            * history_type: `Literal['literal']`
+            * winner: `int|None`
+            * scores: `list[ int ]`
+        * Shift Keys
+            * turn_index: `int`
+            * current_player: `int`
+            * board_state `int`
+                * `= _state_asInt( np.ndarray )`
+            * action_choices: `int`
+                * `= _state_asInt( np.ndarray )`
+            * player_action: `int`
+                * `= _state_asInt( np.ndarray )`
+        * Shift Index Keys
+            * ai_id: `str`
+            * action_tags: `list[ str ]`
 """
 
 from . import jable
@@ -82,7 +138,8 @@ def new_literalHistory(
             "player_action"
         ],
         shiftIndexHeader = [
-            "ai_id"
+            "ai_id",
+            "action_tags"
         ],
         keyTypes = {
             "board_state": np.ndarray,
@@ -117,6 +174,7 @@ def new_povHistory(
             "board_state",
             "action_choices",
             "player_action",
+            "action_tags",
             "scores",
             "winner"
         ],
@@ -166,20 +224,36 @@ def povHistory_from_literalHistory(
             ) % literalHistory.get_fixed("player_count")
         #/if literalWinner is None/else
         
-        povHistory.append({
-            "turn_index": row["turn_index"],
-            "current_player": row["current_player"],
-            "board_state": get_relativeStateVector(
-                row["board_state"],
-                player_id = row["current_player"],
-                player_count = literalHistory.get_fixed("player_count")
-            ),
-            "action_choices": row["action_choices"],
-            "player_action": row["player_action"],
-            "scores": np.roll( row["scores"], -1*row["current_player"] ).tolist(),
-            "winner": winner,
-            "ai_id": row["ai_id"]
-        })
+        # TEST
+        if True:
+            povHistory.append(
+                row | {
+                    "board_state": get_relativeStateVector(
+                        row["board_state"],
+                        player_id = row["current_player"],
+                        player_count = literalHistory.get_fixed("player_count")
+                    ),
+                    "scores": np.roll( row["scores"], -1*row["current_player"] ).tolist(),
+                    "winner": winner
+                }
+            )
+        #
+        else:
+            povHistory.append({
+                "turn_index": row["turn_index"],
+                "current_player": row["current_player"],
+                "board_state": get_relativeStateVector(
+                    row["board_state"],
+                    player_id = row["current_player"],
+                    player_count = literalHistory.get_fixed("player_count")
+                ),
+                "action_choices": row["action_choices"],
+                "player_action": row["player_action"],
+                "scores": np.roll( row["scores"], -1*row["current_player"] ).tolist(),
+                "winner": winner,
+                "ai_id": row["ai_id"]
+            })
+        #
     #/for row in literalHistory
     
     return povHistory
@@ -228,32 +302,48 @@ def history_asInt(
         :returns: Decoded JyFrame with binary np.ndarray columns
         :rtype: jable.JyFrame
         
-        Encode the "board_state", "action_choices", and "player_action" as integers from binary np.ndarrays
+        Encode the "board_state", "action_choices", and "player_action" as integers from binary np.ndarrays, making a 'disk' history.
     """
-    
     history_out: jable.JyFrame = jable.likeJyFrame(
         history
     )
     
+    # TEST
     for row in history:
-        old_fields: dict[ str, any ] = {
-            key: val for key, val in row.items() if key not in [
-                "board_state","action_choices","player_action"
-            ]
-        }
-        history_out.append(
-            old_fields | {
-                "board_state": _state_asInt(
-                    row["board_state"]
-                ),
-                "action_choices": _state_asInt(
-                    row["action_choices"],
-                ),
-                "player_action": _state_asInt(
-                    row["player_action"]
-                )
+        if True:
+            history_out.append(
+                row | {
+                    "board_state": _state_asInt(
+                        row["board_state"]
+                    ),
+                    "action_choices": _state_asInt(
+                        row["action_choices"],
+                    ),
+                    "player_action": _state_asInt(
+                        row["player_action"]
+                    )
+                }
+            )
+        else:
+            old_fields: dict[ str, any ] = {
+                key: val for key, val in row.items() if key not in [
+                    "board_state","action_choices","player_action"
+                ]
             }
-        )
+            history_out.append(
+                old_fields | {
+                    "board_state": _state_asInt(
+                        row["board_state"]
+                    ),
+                    "action_choices": _state_asInt(
+                        row["action_choices"],
+                    ),
+                    "player_action": _state_asInt(
+                        row["player_action"]
+                    )
+                }
+            )
+        #
     #/for row in history
     
     history_out._keyTypes["board_state"] = int
@@ -285,27 +375,48 @@ def history_fromInt(
     state_length: int = board_size*history.get_fixed("player_count")
     
     for row in history:
-        old_fields: dict[ str, any ] = {
-            key: val for key, val in row.items() if key not in [
-                "board_state","player_action"
-            ]
-        }
-        history_out.append(
-            old_fields | {
-                "board_state": _state_fromInt(
-                    row["board_state"],
-                    length = state_length
-                ),
-                "action_choices": _state_fromInt(
-                    row["action_choices"],
-                    length = board_size
-                ),
-                "player_action": _state_fromInt(
-                    row["player_action"],
-                    length = board_size
-                )
+        # TEST
+        if True:
+            history_out.append(
+                row | {
+                    "board_state": _state_fromInt(
+                        row["board_state"],
+                        length = state_length
+                    ),
+                    "action_choices": _state_fromInt(
+                        row["action_choices"],
+                        length = board_size
+                    ),
+                    "player_action": _state_fromInt(
+                        row["player_action"],
+                        length = board_size
+                    )
+                }
+            )
+        #
+        else:
+            old_fields: dict[ str, any ] = {
+                key: val for key, val in row.items() if key not in [
+                    "board_state","player_action"
+                ]
             }
-        )
+            history_out.append(
+                old_fields | {
+                    "board_state": _state_fromInt(
+                        row["board_state"],
+                        length = state_length
+                    ),
+                    "action_choices": _state_fromInt(
+                        row["action_choices"],
+                        length = board_size
+                    ),
+                    "player_action": _state_fromInt(
+                        row["player_action"],
+                        length = board_size
+                    )
+                }
+            )
+        #
     #/for row in history
     history_out._keyTypes["board_state"] = np.ndarray
     history_out._keyTypes["action_choices"] = np.ndarray

@@ -1,5 +1,9 @@
 """
-    Interface to play games (of Hexathello) and show the results
+    Interface to play games (of Hexathello) and save the results.
+    
+    Plays games with ``hexathello.aiPlayers.HexAgent`` objects.
+    
+    Returns game results as a `JyFrame` history class; see ``hexathello.history.new_literalHistory()``, ``hexathello.history.new.pov_history()``. Save these to disk and use them to train AI, most likely ``hexathello.aiPlayers.KerasHexAgent`` subclasses.
 """
 
 from . import engine, history, jable
@@ -60,7 +64,7 @@ def runHexathello_withAgents(
         :param int logging_level: Passed to the hexathello engine for how much detail to log
         :param np.random.Generator rng: Used to make various decisions both for the game and AI agents
         :param engine.HexagonGridHelper hexagonGridHelper: Used to help with calculations for both the engine and AI agents
-        :returns: The literal history
+        :returns: The literal game history
         :rtype: jable.JyFrame
         
         Plays a game with set AI and prints everything as it goes
@@ -68,7 +72,7 @@ def runHexathello_withAgents(
         fixed:
             player_count: int
             size: int
-            winner: int | None
+            winner: int|None
             scores: list[ int ]
         shift:
             turn_index: int
@@ -76,6 +80,7 @@ def runHexathello_withAgents(
             boardState: np.ndarray
             actionChoices: np.ndarray
             player_action: np.ndarray
+            action_tags: list[ str ]
     """
     from copy import deepcopy
     
@@ -112,8 +117,8 @@ def runHexathello_withAgents(
     )
     
     
-    # Initialize game history
-    history: jable.JyFrame = history.new_literalHistory(
+    # Initialize game_history
+    game_history: jable.JyFrame = history.new_literalHistory(
         player_count = player_count,
         size = size,
         winner = None,
@@ -168,8 +173,8 @@ def runHexathello_withAgents(
             next_qr
         )
         
-        # Update history
-        history.append(
+        # Update game_history
+        game_history.append(
             {
                 "turn_index": turn_index,
                 "current_player": next_player_index,
@@ -180,7 +185,8 @@ def runHexathello_withAgents(
                 "action_choices": action_choices,
                 "player_action": hexagonGridHelper.moveVector_from_play(
                     qr = next_qr
-                )
+                ),
+                "action_tags": next_move["action_tags"]
             }
         )
         
@@ -207,11 +213,11 @@ def runHexathello_withAgents(
             print("# Game done")
             print( hexathello.status )
             
-            # Set history
-            history["winner"] = hexathello.status["winner"]
-            history["scores"] = deepcopy( hexathello.status["scores"] )
+            # Set game_history
+            game_history["winner"] = hexathello.status["winner"]
+            game_history["scores"] = deepcopy( hexathello.status["scores"] )
             break
         #/if hexathello.status["game_complete"]
     #/for _ in range( empty_count )
-    return history
+    return game_history
 #/def runHexathello_withAgents
