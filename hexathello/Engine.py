@@ -14,6 +14,9 @@ import numpy as np
 # CellStatus: represents a single spot on the board
 # You CAN make an update with it to empty a spot but that shouldn't happen in game
 class CellStatus( TypedDict ):
+    """
+        A single spot on the board you CAN make an update with it to empty a spot but that shouldn't happen in game.
+    """
     q: int
     r: int
     occupied_adjacent: int
@@ -21,18 +24,28 @@ class CellStatus( TypedDict ):
 #/class CellStatus
 
 
-# CellCapture: Changes another spot; can in theory be removing an owner
+# CellCapture:
 class CellCapture( TypedDict ):
+    """
+        Changes another spot; can in theory be removing an owner by setting it to `None`
+    """
     q: int
     r: int
     owner: int | None
 #/class CellCapture
 
-# PlayerMove: A location a certain player makes on a certain turn.
+# PlayerMove: A play on a location location a certain player makes on a certain turn.
 # Essentially an interface action.
 # This does not get used as an update; rather, a series of updates, including at least one capture, will follow by generating some CellCapture.
 # Since it's a move it must have an owner, not None
 class PlayerMove( TypedDict ):
+    """
+        A play on a location location a certain player makes on a certain turn. Essentially an interface action.
+        
+        This does not get used as an update; rather, a series of updates, including at least one capture, will follow by generating some CellCapture, based on the board state.
+        
+        Since it's a move it must have an owner, not None
+    """
     turn_index: int
     q: int
     r: int
@@ -241,12 +254,12 @@ def getMoves_forPlayer(
 # -- Hexathello helpers
 class HexagonGridHelper():
     """
-        Tool for working with the hexagonal grid, such as converting coordinates
-        This includes game logic, and ability to get things for machine learning, such as the game state as a one hot encoded vector
+        :param int size: Length of one side of the Hexagonal Grid
+        :param int player_count: Number of players. Restricted to 2, 3, or 6 so that there can be a valid starting position, with the middle 2-ring occupied.
         
-        Note that it will give the middle spot as a potential location, which Hexathello will not do in general. It's up to `Hexathello` to enforce that
+        Tool for working with the hexagonal grid, such as converting coordinates, including some game logic, and ability to get things for machine learning, such as the game state as a one hot encoded vector
+                
         
-        Initialize with the size of the hexagonal grid; result is a grid
         
         qr_to_index: Take a coordinate (q,r) on hexagon grid, return the one hot encoded index, in an array with length equal to number of hex spots
         
@@ -287,15 +300,31 @@ class HexagonGridHelper():
     def index_from_qr_tuple(
         self: Self,
         qr: QRTuple
-    ) -> int:
+        ) -> int:
+        """
+            :param QRTuple qr: Sized 2 tuple of qr grid coordinates
+            :returns: The index among all board spots
+            :rtype: int
+        """
         return self.qr_to_index[ qr ]
     #
     
     def index_from_qr( self: Self, q: int, r: int ) -> int:
+        """
+            :param int q: q coordinate of hex spot
+            :param int r: r coordinate of hex spot
+            :returns: The index among all board spots
+            :rtype: int
+        """
         return self.qr_to_index[ (q,r) ]
     #
     
     def qr_from_index( self: Self, index: int ) -> QRTuple:
+        """
+            :param int index: The index among all board spots
+            :returns: Sized 2 tuple of qr grid coordinates
+            :rtype: QRTuple
+        """
         return self.index_to_qr[ index ]
     #
     
@@ -304,7 +333,9 @@ class HexagonGridHelper():
         boardState: BoardState
         ) -> np.ndarray:
         """
-            Gets a OHE vector describing the board. Each space is a series of tuples of length equal to the number of players; if all are 0, the space is unoccupied. If it is owned, then the jth index being 1 is the owner.
+            :param BoardState boardState: dictionary of `QRTuple` to `CellStatus` representing every spot on the board
+            :returns: OHE vector describing the board. Each space is a series of tuples of length equal to the number of players; if all are 0.0, the space is unoccupied. If it is owned, then the jth index being 1.0 is the owner.
+            :rtype: numpy.ndarray
             
             Example: for two players, if we have
             
@@ -336,6 +367,10 @@ class HexagonGridHelper():
     
     def moveVector_from_play( self: Self, qr: QRTuple ) -> np.ndarray:
         """
+            :param QRTuple qr: Sized 2 tuple of qr grid coordinates
+            :returns: An array with one value equal to 1.0, rest 0.0, representing the move taken. This is the format of a "player_action" in a history.
+            :rtype: numpy.ndarray
+            
             Converts a given choice to a move vector, which has the same length as the number of spots
         """
         moveVector: np.ndarray = np.zeros( shape = (self.length,), dtype = float )
@@ -349,7 +384,11 @@ class HexagonGridHelper():
         self: Self,
         moveVector: np.ndarray
         ) -> QRTuple:
-        
+        """
+            :param numpy.ndarray moveVector: One hot encoded move. Calculates the qr using `.qr_from_index()`
+            :returns: Sized 2 tuple of qr grid coordinates where the move was made
+            :rtype: QRTuple
+        """
         i: int = next( i for i in range( self.length ) if moveVector[i] > 0 )
         return self.qr_from_index( i )
     #/def play_from_moveVector

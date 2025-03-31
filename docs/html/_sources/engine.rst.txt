@@ -2,3 +2,21 @@ engine
 #######
 
 .. automodule:: hexathello.engine
+    :members: CellStatus, CellCapture, PlayerMove
+
+Other types include:
+
+.. code:: python
+
+    QRTuple = tuple[ int, int ]
+    MoveChoiceDict = dict[
+        QRTuple,
+        list[ CellCapture ]
+    ]
+    BoardState = dict[
+        QRTuple,
+        CellStatus
+    ]
+
+.. autoclass:: hexathello.engine.HexagonGridHelper
+    :members: index_from_qr_tuple, index_from_qr, qr_from_index, stateVector_from_boardState, moveVector_from_play, play_from_moveVector

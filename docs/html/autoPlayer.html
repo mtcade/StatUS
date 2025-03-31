@@ -32,8 +32,48 @@
 
           <div class="body" role="main">
             
-  <section id="autoplayer">
-<h1>autoPlayer<a class="headerlink" href="#autoplayer" title="Link to this heading">¶</a></h1>
+  <section id="module-hexathello.autoPlayer">
+<span id="autoplayer"></span><h1>autoPlayer<a class="headerlink" href="#module-hexathello.autoPlayer" title="Link to this heading">¶</a></h1>
+<p>Interface to play games (of Hexathello) and save the results.</p>
+<p>Plays games with <code class="docutils literal notranslate"><span class="pre">hexathello.aiPlayers.HexAgent</span></code> objects.</p>
+<p>Returns game results as a <cite>JyFrame</cite> history class; see <code class="docutils literal notranslate"><span class="pre">hexathello.history.new_literalHistory()</span></code>, <code class="docutils literal notranslate"><span class="pre">hexathello.history.new.pov_history()</span></code>. Save these to disk and use them to train AI, most likely <code class="docutils literal notranslate"><span class="pre">hexathello.aiPlayers.KerasHexAgent</span></code> subclasses.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="hexathello.autoPlayer.runHexathello_withAgents">
+<span class="sig-prename descclassname"><span class="pre">hexathello.autoPlayer.</span></span><span class="sig-name descname"><span class="pre">runHexathello_withAgents</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">agents</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">AiAgentProtocol</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logging_level</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rng</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Generator</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hexagonGridHelper</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">HexagonGridHelper</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">JyFrame</span></span></span><a class="headerlink" href="#hexathello.autoPlayer.runHexathello_withAgents" title="Link to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>agents</strong> (<em>list</em><em>[ </em><em>AiAgentProcol</em><em> ]</em>) – Initialized list of ai agents from <code class="docutils literal notranslate"><span class="pre">aiPlayers</span></code></p></li>
+<li><p><strong>size</strong> (<em>int</em>) – Length of one side of the hexagon board</p></li>
+<li><p><strong>logging_level</strong> (<em>int</em>) – Passed to the hexathello engine for how much detail to log</p></li>
+<li><p><strong>rng</strong> (<em>np.random.Generator</em>) – Used to make various decisions both for the game and AI agents</p></li>
+<li><p><strong>hexagonGridHelper</strong> (<em>engine.HexagonGridHelper</em>) – Used to help with calculations for both the engine and AI agents</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The literal game history</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>jable.JyFrame</p>
+</dd>
+</dl>
+<p>Plays a game with set AI and prints everything as it goes</p>
+<dl class="simple">
+<dt>fixed:</dt><dd><p>player_count: int
+size: int
+winner: int|None
+scores: list[ int ]</p>
+</dd>
+<dt>shift:</dt><dd><p>turn_index: int
+current_player: int
+boardState: np.ndarray
+actionChoices: np.ndarray
+player_action: np.ndarray
+action_tags: list[ str ]</p>
+</dd>
+</dl>
+</dd></dl>
+
 </section>
 
 
@@ -57,7 +97,10 @@
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="engine.html">engine</a></li>
 <li class="toctree-l1"><a class="reference internal" href="aiPlayer.html">aiPlayers</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">autoPlayer</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">autoPlayer</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#hexathello.autoPlayer.runHexathello_withAgents"><code class="docutils literal notranslate"><span class="pre">runHexathello_withAgents()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="history.html">History</a></li>
 </ul>
 
