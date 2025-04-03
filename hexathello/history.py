@@ -60,7 +60,8 @@
             * action_tags: `list[ str ]`
 """
 
-from . import engine, jable
+import hexathello.engine as engine
+import hexathello.jable as jable
 
 import numpy as np
 

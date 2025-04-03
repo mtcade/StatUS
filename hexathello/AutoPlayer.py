@@ -6,7 +6,10 @@
     Returns game results as a `JyFrame` history class; see ``hexathello.history.new_literalHistory()``, ``hexathello.history.new.pov_history()``. Save these to disk and use them to train AI, most likely ``hexathello.aiPlayers.KerasHexAgent`` subclasses.
 """
 
-from . import engine, history, jable
+import hexathello.engine as engine
+import hexathello.history as history
+import hexathello.jable as jable
+
 import numpy as np
 
 from typing import Literal, Protocol, Self

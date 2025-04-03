@@ -1,7 +1,7 @@
 """
     The Hexathello Engine enforces the rules of the game. autoPlayer contains an interface for getting AI agents to play it. The `game` interface allows it to be used for a human interactable app, with interface and events.
 """
-from . import jable
+import hexathello.jable as jable
 
 from typing import Literal, Optional, Protocol, Self, TypedDict
 import queue

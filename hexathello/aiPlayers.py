@@ -3,8 +3,10 @@
     
     Using ``hexathello.autoPlayer.runHexathello_withAgents()``, we have them play games with eachother to generate data on good moves, by saving it as a history, as from ``hexathello.history.new_literalHistory()``. Agents can use this data to learn, likely with ``KerasHexAgent()`` to use `tensorflow.keras` for neural network decision making.
 """
+import hexathello.engine as engine
+import hexathello.history as history
+import hexathello.jable as jable
 
-from . import engine, history, jable
 import numpy as np
 
 from typing import Literal, Protocol, Self
