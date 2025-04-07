@@ -71,10 +71,59 @@ MoveChoiceDict = dict[
 ]
 
 # BoardState: (q,r) (QRTuple) axial coordinate to CellStatus
+
 BoardState = dict[
     QRTuple,
     CellStatus
 ]
+"""
+    The board state is a dictionary from board states to the status of cells; this prevents us from having to search through a table of coordinates, since we will know the dictionary keys ahead of time. A simple example is the degenerate game of size 2
+    
+    {
+        (0,0): {
+            "q": 0,
+            "r": 0,
+            "occupied_adjacent": 6,
+            "owner": None
+        },
+        (1,0):{
+            "q": 1,
+            "r": 0,
+            "occupied_adjacent": 2,
+            "owner": 0
+        },
+        (0,1):{
+            "q": 0,
+            "r": 1,
+            "occupied_adjacent": 2,
+            "owner": 1
+        },
+        (-1,1):{
+            "q": -1,
+            "r": 1,
+            "occupied_adjacent": 2,
+            "owner": 0
+        },
+        (-1,0):{
+            "q": -1,
+            "r": 0,
+            "occupied_adjacent": 2,
+            "owner": 1
+        },
+        (0,-1):{
+            "q": 0,
+            "r": -1,
+            "occupied_adjacent": 2,
+            "owner": 0
+        },,
+        (1,-1):{
+            "q": 1,
+            "r": -1,
+            "occupied_adjacent": 2,
+            "owner": 1
+        }
+    }
+"""
 
 def print_boardState(
     boardState: BoardState,
