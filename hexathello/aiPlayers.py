@@ -130,6 +130,11 @@ def _greedy_play(
 class KerasHexAgent( HexAgent ):
     """
         Uses a tensorflow keras network to make decisions, via a PredictionModel, most likely a compiled neural network. This class can handle training the network, stored in `.brain` using `.train()`.
+        
+        To change the logic used, make a subclass and overwrite:
+        
+        `.chooseMove()`: Turn a vector of weights into the index of the chosen play
+        `.prep_training_history()`: Take a training history, apply filters, and potentially set a column of "sample_weight"
     """
     def __init__(
         self: Self,
