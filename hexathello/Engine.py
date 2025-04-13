@@ -79,6 +79,10 @@ BoardState = dict[
 """
     The board state is a dictionary from board states to the status of cells; this prevents us from having to search through a table of coordinates, since we will know the dictionary keys ahead of time. A simple example is the degenerate game of size 2
     
+    [0,0,1,0,... ]
+    
+    [1,0,...]
+    
     {
         (0,0): {
             "q": 0,
@@ -166,6 +170,22 @@ def adjacent_spaces( qr: QRTuple ) -> list[ QRTuple ]:
             for vector in CLOCKWISE_UNIT_VECTOR_LIST
     ]
 #/def adjacent_spaces
+
+def adjacent_occupied_count(
+    qr: QRTuple,
+    boardState: BoardState
+    ) -> int:
+    adjacent_occupied: int = 0
+    for qr_adjacent in adjacent_spaces( qr ):
+        if qr_adjacent not in boardState:
+            continue
+        #
+        if boardState[ qr_adjacent ]["owner"] is not None:
+            adjacent_occupied += 1
+        #
+    #/for qr_adjacent in adjacent_spaces( qr )
+    return adjacent_occupied
+#/def adjacent_occupied_count
 
 def get_potential_moves( boardState: BoardState ) -> list[ QRTuple ]:
     """
@@ -322,6 +342,7 @@ class HexagonGridHelper():
         player_count: int
         ) -> None:
         
+        self.size = size
         self.player_count = player_count
         self.qr_to_index: dict[ QRTuple, int ] = {}
         self.index_to_qr: list[ QRTuple ] = []
@@ -414,7 +435,60 @@ class HexagonGridHelper():
         return stateVector
     #/def stateVector_from_boardState
     
-    def moveVector_from_play( self: Self, qr: QRTuple ) -> np.ndarray:
+    def boardState_from_stateVector(
+        self: Self,
+        stateVector: np.ndarray
+        ) -> BoardState:
+        
+        boardState: BoardState = {}
+        # Iterate through each tuple
+        start_i: int
+        end_i: int
+        next_tup: np.ndarray
+        is_one_tup: np.ndarray
+        qr: QRTuple
+        for i in range( len(self.index_to_qr) ):
+            start_i = i*self.player_count
+            end_i = start_i + self.player_count
+            next_tup = stateVector[
+                start_i:end_i
+            ]
+            owner: int | None
+            if np.all(np.isclose( next_tup, 0.0 )):
+                owner = None
+            #
+            else:
+                is_one_tup = np.isclose( next_tup, 1.0 )
+                if not np.any( is_one_tup ):
+                    raise Exception("Missing owner at index={}; next_tup={}".format(i, next_tup))
+                #
+                owner = np.argmax( is_one_tup )
+            #
+            qr = self.index_to_qr[ i ]
+            boardState[
+                qr
+            ] = {
+                "q": qr[0],
+                "r": qr[1],
+                "owner": owner
+            }
+        #/for i in range( self.size )
+        
+        # Update "occupied_adjacent"
+        occupied_adjacent: int
+        for qr in boardState:
+            boardState[ qr ]["adjacent_occupied"] = adjacent_occupied_count(
+                qr = qr,
+                boardState = boardState
+            )
+        #/for qr in boardState
+        return boardState
+    #/def boardState_from_stateVector
+    
+    def moveVector_from_play(
+        self: Self,
+        qr: QRTuple
+        ) -> np.ndarray:
         """
             :param QRTuple qr: Sized 2 tuple of qr grid coordinates
             :returns: An array with one value equal to 1.0, rest 0.0, representing the move taken. This is the format of a "player_action" in a history.
@@ -445,16 +519,41 @@ class HexagonGridHelper():
 
 SIZE_DICT: dict[ int, int ] = {3: 19, 4: 37, 5: 61, 6: 91}
 
-def get_spaceCount_forSize( size: int ):
+def get_spaceCount_forSize(
+    size: int,
+    hexagonGridHelper: HexagonGridHelper | None = None,
+    player_count: int | None = None
+    ):
     if size in SIZE_DICT:
         return SIZE_DICT[ size ]
     #
     
-    hexagonGridHelper = HexagonGridHelper( size = size, player_count = 2 )
+    if hexagonGridHelper is None:
+        assert player_count is not None
+        hexagonGridHelper = HexagonGridHelper( size = size, player_count = player_count )
+    #
     SIZE_DICT[ size ] = int( hexagonGridHelper.length )
     
     return SIZE_DICT[ size ]
-#
+#/get_spaceCount_forSize
+
+def get_boardState_from_vector(
+    boardState_vector: np.ndarray,
+    hexagonGridHelper: HexagonGridHelper | None = None,
+    player_count: int | None = None,
+    size: int | None = None
+    ) -> BoardState:
+    if hexagonGridHelper is None:
+        assert size is not None
+        hexagonGridHelper = HexagonGridHelper(
+            size = size,
+            player_count = player_count
+        )
+    #
+    return hexagonGridHelper.boardState_from_stateVector(
+        boardState_vector
+    )
+#/get_boardState_from_vector
 
 # -- Simulator: interface for Spaghett
 

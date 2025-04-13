@@ -372,7 +372,8 @@ def history_fromInt(
     
     # Figure out our deserialization length
     board_size: int = engine.get_spaceCount_forSize(
-        size = history.get_fixed("size")
+        size = history.get_fixed("size"),
+        player_count = history.get_fixed("player_count")
     )
     state_length: int = board_size*history.get_fixed("player_count")
     
