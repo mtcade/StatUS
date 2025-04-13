@@ -8,6 +8,14 @@ import svg
 
 import numpy as np
 
+COLORS = {
+    "hexagon_owner": {
+        None: "#00AA77",
+        0: "#FFFFFF",
+        1: "#000000"
+    }
+}
+
 def centerPoint_from_cellStatus(
     qr: engine.QRTuple,
     hexagon_radius: float,
@@ -99,16 +107,19 @@ def hexagon_from_cellStatus(
 
 def polygon_fill_for_owner(
     owner: int | None,
+    colors: dict[{
+        "hexagon_owner": dict[
+            int | None, str
+        ]
+    }] = {}
     ) -> str:
-    if owner is None:
-        return "#00AA77"
-    elif owner == 0:
-        return "#FFFFFF"
-    elif owner == 1:
-        return "#000000"
-    else:
-        raise Exception("Unrecognized owner={}".format(owner))
+    if colors == {}:
+        colors = COLORS
     #
+    if owner not in colors["hexagon_owner"]:
+        raise ValueError("Missing {} from colors['hexagon_owner']".format(owner))
+    #
+    return colors["hexagon_owner" ][ owner ]
 #/def polygon_fill_for_owner
 
 def from_boardState(
