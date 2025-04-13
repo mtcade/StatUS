@@ -194,7 +194,7 @@ class KerasHexAgent( HexAgent ):
             boardState
         )
         
-        return get_relativeStateVector(
+        return history.get_relativeStateVector(
             boardState_vector = boardState_vector,
             player_id = self.player_id,
             player_count = self.player_count
@@ -215,6 +215,7 @@ class KerasHexAgent( HexAgent ):
             :returns: Dictionary of the chosen move
             :rtype: engine.PlayerMove
         """
+        import tensorflow as tf
         #
         assert self.player_id is not None
         moveChoiceDict: engine.MoveChoiceDict = engine.getMoves_forPlayer(
@@ -253,20 +254,24 @@ class KerasHexAgent( HexAgent ):
                 # Use our brain to get weighs of each move
                 # NOTE: We can choose from these weights using
                 #   self.chooseMove(...), something like the max
+                
                 moveChoice_vector: np.ndarray = self.brain.predict(
-                    boardState_vector
+                    np.reshape(
+                        boardState_vector,
+                        newshape = (1, len( boardState_vector ) )
+                    )
                 )
                 
                 # Mask it with legal moves
                 
-                assert len( moves ) > 0
+                assert len( moveChoiceDict ) > 0
                 legal_moves_vector: np.ndarray = np.zeros(
-                    shape = (len( moveChoice_vector ),),
+                    shape = (len( boardState ),),
                     dtype = float
                 )
                 
                 for qr in moveChoiceDict:
-                    moves_vector[
+                    legal_moves_vector[
                         self.hexagonGridHelper.index_from_qr_tuple(
                             qr
                         )
@@ -275,13 +280,15 @@ class KerasHexAgent( HexAgent ):
 
                 # Distribution of choices might have been given; make choice, potentially probabilistically
                 # This result is a literal spot index, not relative to anyone
-                moveChoice_final: int = self.choseMove(
-                    moveChoice_vector * legal_moves_vector
+                moveChoice_vector_masked: np.ndarray = moveChoice_vector * legal_moves_vector
+                moveChoice_final: int = self.chooseMove(
+                    moveChoice_vector_masked,
+                    rng = rng
                 )
 
-                qr: engine.QRTuple = self.hexagonGridHelper.qr_from_index[
+                qr: engine.QRTuple = self.hexagonGridHelper.qr_from_index(
                     moveChoice_final
-                ]
+                )
                 
                 assert qr in moveChoiceDict
                 action_tags.append('brain')
