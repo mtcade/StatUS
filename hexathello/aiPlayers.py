@@ -285,10 +285,32 @@ class KerasHexAgent( HexAgent ):
                     moveChoice_vector_masked,
                     rng = rng
                 )
-
-                qr: engine.QRTuple = self.hexagonGridHelper.qr_from_index(
-                    moveChoice_final
+                
+                if np.all(
+                    np.isclose(
+                        moveChoice_vector[ moveChoice_final ], moveChoice_vector_masked
+                    ):
+                        # Could not effectively make a choice; go random
+                        qr = _random_play(
+                            moveChoiceDict,
+                            rng = rng
+                        )
+                    #
                 )
+                else:
+                    qr: engine.QRTuple = self.hexagonGridHelper.qr_from_index(
+                        moveChoice_final
+                    )
+                #/if np.all( np.isclose( { move choices } ) )
+                
+                if qr not in moveChoiceDict:
+                    print( moveChoice_vector )
+                    print( moveChoice_vector_masked )
+                    print( moveChoice_final )
+                    print( moveChoiceDict )
+                    print( qr )
+                    raise Exception("Bad QR")
+                #
                 
                 assert qr in moveChoiceDict
                 action_tags.append('brain')
