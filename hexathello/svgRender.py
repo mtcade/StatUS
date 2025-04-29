@@ -132,6 +132,13 @@ def from_boardState(
     canvas_height: float
     ) -> svg.SVG:
     """
+        :param engine.BoardState boardState: Full dictionary of board states, rendering one hexagon per spot
+        :param int size: Length of one side of the hexagon board, in hexagon counts
+        :param float hexagon_radius: Canvas distance from center of hexagon to a vertex
+        :param float hexagon_stroke_width: Canvas width of border of hexagons
+        :param float canvas_width: Total width of canvas
+        :param float canvas_height: Total height of canvas
+        
         Initializes svg with the given dimensions, filling in the hexagons
     """
     return svg.SVG(
