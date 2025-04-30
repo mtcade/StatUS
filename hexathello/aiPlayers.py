@@ -281,14 +281,12 @@ class KerasHexAgent( HexAgent ):
                 # Distribution of choices might have been given; make choice, potentially probabilistically
                 # This result is a literal spot index, not relative to anyone
                 moveChoice_vector_masked: np.ndarray = moveChoice_vector * legal_moves_vector
-                moveChoice_final: int = self.chooseMove(
-                    moveChoice_vector_masked,
-                    rng = rng
-                )
+                
                 
                 if np.all(
                     np.isclose(
-                        moveChoice_vector[ moveChoice_final ], moveChoice_vector_masked
+                        moveChoice_vector_masked[0],
+                        moveChoice_vector_masked
                     )
                 ):
                     # Could not effectively make a choice; go random
@@ -298,6 +296,10 @@ class KerasHexAgent( HexAgent ):
                     )
                 #
                 else:
+                    moveChoice_final: int = self.chooseMove(
+                        moveChoice_vector_masked,
+                        rng = rng
+                    )
                     qr: engine.QRTuple = self.hexagonGridHelper.qr_from_index(
                         moveChoice_final
                     )
