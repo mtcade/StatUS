@@ -87,14 +87,18 @@ def runHexathello_withAgents(
     """
     from copy import deepcopy
     
+    # Set temporary IDs
+    old_player_ids: list = [
+        deepcopy( agent.player_id ) for agent in agents
+    ]
     # Check we numbered agents appropriately
+    
+    # set player ids to be appropriate numbers
+    for agent in agents:
+        agent.player_id
+    #
     for i in range( len( agents ) ):
-        if agents[i].player_id is None:
-            agents[i].player_id = i
-        #
-        else:
-            assert agents[i].player_id == i
-        #/if agents[i].player_id is None/else
+        agents[i].player_id = i
     #/for i in range( len( agents ) )
     
     if rng is None:
@@ -221,5 +225,11 @@ def runHexathello_withAgents(
             break
         #/if hexathello.status["game_complete"]
     #/for _ in range( empty_count )
+    
+    # Set old ids back
+    for i in range( len( agents ) ):
+        agents[i].player_id = old_player_ids[i]
+    #/for i in range( len( agents ) )
+    
     return game_history
 #/def runHexathello_withAgents
