@@ -306,12 +306,7 @@ class KerasHexAgent( HexAgent ):
                 #/if np.all( np.isclose( { move choices } ) )
                 
                 if qr not in moveChoiceDict:
-                    print( moveChoice_vector )
-                    print( moveChoice_vector_masked )
-                    print( moveChoice_final )
-                    print( moveChoiceDict )
-                    print( qr )
-                    raise Exception("Bad QR")
+                    raise Exception("Bad qr={}".format(qr))
                 #
                 
                 assert qr in moveChoiceDict

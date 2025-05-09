@@ -941,6 +941,9 @@ class JyFrame():
             If strict, append row which has keys a subset of the keys of self._shift
             If not strict, append keys from row which are present in self._shift, and None for keys missing from row
         """
+        if isinstance( row, JyFrame ):
+            raise TypeError("`append` uses rows, not a table. use `extend`")
+        #
         # Make sure fixed keys match
         for key in self._fixed:
             if key in row:
